@@ -1,0 +1,109 @@
+@import "tailwindcss";
+.game-table {
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  background-color: #1a1a2e;
+}
+
+.game-table .table-header {
+  background-color: #16213e;
+  color: #e1e1e6;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 0.9rem;
+}
+
+.game-table .table-cell {
+  padding: 0.8rem 1rem;
+  transition: background-color 0.2s ease;
+}
+
+.game-table .table-row {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.game-table .table-row:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Couleurs pour les correspondances */
+.bg-green-600 {
+  background-color: #2e7d32 !important;
+  color: white !important;
+}
+
+.bg-orange-500 {
+  background-color: #ef6c00 !important;
+  color: white !important;
+}
+
+.bg-red-600 {
+  background-color: #c62828 !important;
+  color: white !important;
+}
+
+/* Amélioration du style du bouton Guess */
+.guess-button {
+  background-color: #3f51b5;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+}
+
+.guess-button:hover {
+  background-color: #303f9f;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Amélioration du style de l'input */
+.guess-input {
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.guess-input:focus {
+  border-color: #3f51b5;
+  background-color: rgba(255, 255, 255, 0.15);
+  outline: none;
+}
+
+/* Améliorations pour les suggestions */
+.suggestions-list {
+  background-color: #1a1a2e;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
+.suggestion-item {
+  padding: 0.75rem 1rem;
+  transition: all 0.2s ease;
+}
+
+.suggestion-item:hover {
+  background-color: #3f51b5;
+}
+/* Ajouter ceci à votre fichier CSS global */
+.bg-green-600,
+.bg-orange-500,
+.bg-red-600 {
+  color: white !important;
+}
+
+/* Ou si vous préférez des classes séparées pour la couleur du texte */
+.text-cell-white {
+  color: white !important;
+}
