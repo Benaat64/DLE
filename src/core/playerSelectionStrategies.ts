@@ -1,5 +1,8 @@
 import { GameData, PlayerSelectionStrategy } from "./types";
 
+// Liste des ligues majeures autorisées
+const MAJOR_LEAGUES = ["LEC", "LCK", "LPL", "LCS", "LTA North", "LTA South"];
+
 // Stratégie de sélection aléatoire (mode développement)
 export class RandomPlayerStrategy<T extends GameData>
   implements PlayerSelectionStrategy<T>
@@ -90,6 +93,16 @@ export const createPlayerSelectionStrategy = <T extends GameData>(
   leagues?: string[],
   leagueId: string = "all"
 ): PlayerSelectionStrategy<T> => {
+  // Traitement spécial pour la ligue LEC
+  if (leagueId.toLowerCase() === "lec") {
+    // Forcer à utiliser uniquement les joueurs de la LEC
+    // en excluant explicitement les joueurs EMEA
+    return isDevelopment
+      ? new RandomPlayerStrategy<T>(["LEC"], "lec")
+      : new DailyPlayerStrategy<T>(["LEC"], "lec");
+  }
+
+  // Pour les autres ligues, comportement normal
   return isDevelopment
     ? new RandomPlayerStrategy<T>(leagues, leagueId)
     : new DailyPlayerStrategy<T>(leagues, leagueId);

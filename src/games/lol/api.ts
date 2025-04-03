@@ -171,6 +171,9 @@ export class LolApiAdapter implements DataAdapter<LolPlayerData> {
       this.leagueFilter = MAJOR_LEAGUES;
     } else if (leagueId === "lta") {
       this.leagueFilter = ["LTA North", "LTA South"];
+    } else if (leagueId.toLowerCase() === "lec") {
+      // Spécifiquement pour LEC, exclure EMEA
+      this.leagueFilter = ["LEC"]; // Uniquement LEC, pas EMEA
     } else {
       this.leagueFilter = [leagueId.toUpperCase()];
     }

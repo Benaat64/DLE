@@ -6,7 +6,10 @@ import { lolThemeConfig } from "./config";
 import { createPlayerSelectionStrategy } from "../../core/playerSelectionStrategies";
 import PlayerDetails from "./PlayerDetails";
 import { LolPlayerData } from "./types";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
+import HistoryStatsModal from "../../components/HistoryStatsModal";
+import { useEnhancedStats } from "../../core/useEnhancedGameStats";
+import { GuessResult } from "../../core/EnhancedStatsTypes";
 
 const LOLGame = () => {
   // Récupérer le paramètre de ligue de l'URL
@@ -18,6 +21,26 @@ const LOLGame = () => {
 
   // Toujours utiliser le mode production pour avoir le même joueur chaque jour
   const isDevelopment = false;
+
+  // Configuration des statistiques
+  const statsConfig = useMemo(
+    () => ({
+      gameId: "lol",
+      maxAttempts: lolThemeConfig.maxAttempts,
+      leagueId: league,
+    }),
+    [league]
+  );
+
+  // Utiliser notre hook de statistiques amélioré
+  const {
+    isStatsModalOpen,
+    setStatsModalOpen,
+    gameResult,
+    statsService,
+    recordGameEnd,
+    showStats,
+  } = useEnhancedStats(statsConfig);
 
   // Filtrer les joueurs selon la ligue sélectionnée
   const leagueFilter = useMemo(() => {
@@ -34,7 +57,6 @@ const LOLGame = () => {
   const adapter = useMemo(() => new LolApiAdapter(), []);
 
   // Créer la stratégie de sélection des joueurs (mémorisée)
-  // Passer la ligue comme seed supplémentaire pour avoir un joueur différent par ligue
   const selectionStrategy = useMemo(
     () =>
       createPlayerSelectionStrategy<LolPlayerData>(
@@ -66,6 +88,46 @@ const LOLGame = () => {
     resetGame,
     setShowSuggestions,
   } = useGameEngine<LolPlayerData>(adapter, lolThemeConfig, selectionStrategy);
+
+  // Convertir les tentatives en résultats pour les statistiques
+  // Cette fonction détermine si chaque tentative est correcte, proche ou incorrecte
+  const generateGuessResults = (): GuessResult[] => {
+    if (!targetPlayer || !guesses.length) return [];
+
+    return guesses.map((guess) => {
+      if (guess.id === targetPlayer.id) {
+        return "correct";
+      }
+
+      // Déterminer si c'est proche ou incorrect
+      // Personnalisez cette logique selon vos règles de jeu
+      const sameTeam = guess.team === targetPlayer.team;
+      const sameRole = guess.role === targetPlayer.role;
+      const sameNationality = guess.nationality === targetPlayer.nationality;
+      const sameLeague = guess.league === targetPlayer.league;
+
+      if (sameTeam || sameRole || sameNationality || sameLeague) {
+        return "close";
+      }
+
+      return "incorrect";
+    });
+  };
+
+  // Enregistrer le résultat du jeu lorsqu'il se termine
+  useEffect(() => {
+    if (gameOver && targetPlayer) {
+      const won = guesses.some((g) => g.id === targetPlayer.id);
+      const guessResults = generateGuessResults();
+
+      // Un petit délai pour permettre au joueur de voir le résultat
+      const timer = setTimeout(() => {
+        recordGameEnd(won, attempts, guessResults);
+      }, 1500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [gameOver, targetPlayer, guesses, attempts, recordGameEnd]);
 
   // Titre ajusté en fonction de la ligue sélectionnée
   const gameTitle =
@@ -116,12 +178,20 @@ const LOLGame = () => {
 
   return (
     <div className="px-4 py-8 max-w-4xl mx-auto">
-      <div className="mb-6">
+      <div className="mb-6 flex justify-between items-center">
         <button
           onClick={() => navigate("/lol")}
           className="text-blue-400 hover:text-blue-300 transition-colors"
         >
           ← Back to League Selection
+        </button>
+
+        {/* Bouton pour afficher les statistiques */}
+        <button
+          onClick={showStats}
+          className="text-blue-400 hover:text-blue-300 transition-colors flex items-center"
+        >
+          <span className="mr-2">📊</span> Stats
         </button>
       </div>
 
@@ -277,6 +347,17 @@ const LOLGame = () => {
           )}
         </>
       )}
+
+      {/* Modal des statistiques avec historique */}
+      <HistoryStatsModal
+        isOpen={isStatsModalOpen}
+        onClose={() => setStatsModalOpen(false)}
+        statsService={statsService}
+        gameResult={gameResult}
+        todaysPlayerName={
+          gameOver && targetPlayer ? targetPlayer.name : undefined
+        }
+      />
     </div>
   );
 };

@@ -54,3 +54,41 @@ export interface GameConfig<T extends GameData> {
   themeConfig: ThemeConfig<T>;
   selectionStrategy: PlayerSelectionStrategy<T>;
 }
+
+// ------ NOUVELLES INTERFACES POUR LES STATISTIQUES ------
+
+// Interface pour les statistiques de jeu
+export interface GameStats {
+  gamesPlayed: number;
+  gamesWon: number;
+  currentStreak: number;
+  maxStreak: number;
+  guessDistribution: number[]; // Index représente le nombre d'essais
+  lastPlayed: string; // Date ISO
+}
+
+// Interface pour la configuration du service de statistiques
+export interface StatsConfig {
+  gameId: string; // Identifiant unique pour chaque jeu (ex: "lol", "nba", etc.)
+  maxAttempts: number; // Nombre maximum d'essais autorisés
+  leagueId?: string; // Identifiant de la ligue (optionnel, pour les jeux avec plusieurs ligues)
+}
+
+// Interface pour le résultat d'une partie
+export interface GameResult {
+  won: boolean;
+  attemptsUsed: number;
+}
+
+// Interface pour le service de statistiques
+export interface StatsService {
+  getStats: () => GameStats;
+  recordGameResult: (result: GameResult) => void;
+  getWinRate: () => number;
+  getMaxGuessDistributionValue: () => number;
+}
+
+// Extension de la configuration du jeu pour inclure les statistiques
+export interface ExtendedGameConfig<T extends GameData> extends GameConfig<T> {
+  statsConfig: StatsConfig;
+}

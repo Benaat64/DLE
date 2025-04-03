@@ -1,5 +1,6 @@
 // controllers/lolController.js - Contrôleurs pour les routes LoL
 const leaguepediaService = require("../services/leaguepediaService");
+const dailyPlayerService = require("../services/dailyPlayerService");
 
 // Fonction pour récupérer les joueurs LoL
 const getLolPlayers = async (req, res) => {
@@ -24,19 +25,18 @@ const getLolPlayers = async (req, res) => {
     // Récupérer les données JSON
     const data = await response.json();
     console.log(
-      "Données reçues de l'API Esports:",
-      JSON.stringify(data, null, 2)
+      `Données reçues de l'API Esports: ${data.data.teams.length} équipes au total`
     );
 
-    // Définir les ligues majeures
-    const majorLeagues = ["LEC", "LCK", "LCS", "LPL", "LTA North"];
+    // Utiliser la liste des ligues majeures du service dailyPlayer
+    const majorLeagues = dailyPlayerService.MAJOR_LEAGUES;
 
     // Filtrer les équipes pour ne conserver que celles des ligues majeures
     const filteredTeams = data.data.teams.filter((team) =>
       majorLeagues.includes(team.homeLeague?.name)
     );
 
-    console.log("Équipes filtrées:", filteredTeams);
+    console.log(`Équipes filtrées: ${filteredTeams.length}`);
 
     // Transformer les données en format GameData
     const players = filteredTeams.flatMap((team) =>
@@ -53,7 +53,7 @@ const getLolPlayers = async (req, res) => {
       }))
     );
 
-    console.log("Joueurs filtrés:", players);
+    console.log(`Joueurs filtrés: ${players.length}`);
 
     res.json(players);
   } catch (error) {
@@ -64,7 +64,7 @@ const getLolPlayers = async (req, res) => {
   }
 };
 
-// Dans controllers/lolController.js
+// Fonction pour obtenir les détails d'un joueur
 const getPlayerDetails = async (req, res) => {
   try {
     const { playerName, team, league, role } = req.query;
@@ -88,15 +88,21 @@ const getPlayerDetails = async (req, res) => {
       error
     );
     res.json({
-      country: "Inconnu",
+      nationalityPrimary: "Inconnu",
+      countryCode: null,
       age: "N/A",
     });
   }
 };
 
+// Fonction pour récupérer le joueur quotidien
 const getDailyPlayer = async (req, res) => {
   try {
-    const dailyPlayer = await dailyPlayerService.getDailyPlayer();
+    const { league } = req.query;
+
+    // Récupérer le joueur quotidien, filtré par ligue si spécifiée
+    const dailyPlayer = await dailyPlayerService.getDailyPlayer(league);
+
     res.json(dailyPlayer);
   } catch (error) {
     console.error("Erreur lors de la récupération du joueur quotidien:", error);
