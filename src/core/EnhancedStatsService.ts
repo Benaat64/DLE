@@ -10,14 +10,12 @@ import {
 export class EnhancedStatsService {
   private config: StatsConfig;
   private storageKey: string;
-  private readonly MAX_HISTORY_SIZE = 10; // Nombre maximum de parties à conserver dans l'historique
+  private readonly MAX_HISTORY_SIZE = 100; // Augmenté pour garder plus d'historique
 
   constructor(config: StatsConfig) {
     this.config = config;
-    // Créer une clé unique pour ce jeu et cette ligue (si applicable)
-    this.storageKey = `game_stats_${config.gameId}${
-      config.leagueId ? "_" + config.leagueId : ""
-    }`;
+    // Créer une clé unique pour ce jeu
+    this.storageKey = `game_stats_${config.gameId}`;
   }
 
   // Initialiser des statistiques vierges
@@ -54,6 +52,69 @@ export class EnhancedStatsService {
     return this.getInitialStats();
   }
 
+  // Récupérer les statistiques pour une ligue spécifique
+  public getStatsForLeague(leagueId: string): GameStats {
+    const allStats = this.getStats();
+
+    // Si on demande toutes les ligues, retourner toutes les statistiques
+    if (leagueId === "all") {
+      return allStats;
+    }
+
+    // Filtrer l'historique des parties pour cette ligue spécifique
+    const leagueHistory = allStats.gameHistory.filter((game) => {
+      const idMatch = game.id.match(/game_\d{4}-\d{2}-\d{2}_(.+)/);
+      return idMatch && idMatch[1] === leagueId;
+    });
+
+    // Calculer les statistiques spécifiques à cette ligue
+    const gamesPlayed = leagueHistory.length;
+    const gamesWon = leagueHistory.filter((game) => game.won).length;
+
+    // Calculer les streaks pour cette ligue
+    let currentStreak = 0;
+    let maxStreak = 0;
+    let tempStreak = 0;
+
+    // Trier par date pour calculer les streaks correctement (du plus récent au plus ancien)
+    const sortedHistory = [...leagueHistory].sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+
+    // Calculer le streak actuel et le streak maximum
+    for (const game of sortedHistory) {
+      if (game.won) {
+        tempStreak++;
+        maxStreak = Math.max(maxStreak, tempStreak);
+      } else {
+        tempStreak = 0;
+      }
+    }
+    currentStreak = tempStreak;
+
+    // Calculer la distribution des essais pour cette ligue
+    const guessDistribution = Array(this.config.maxAttempts).fill(0);
+    leagueHistory.forEach((game) => {
+      if (
+        game.won &&
+        game.attemptsUsed > 0 &&
+        game.attemptsUsed <= this.config.maxAttempts
+      ) {
+        guessDistribution[game.attemptsUsed - 1]++;
+      }
+    });
+
+    return {
+      gamesPlayed,
+      gamesWon,
+      currentStreak,
+      maxStreak,
+      guessDistribution,
+      lastPlayed: sortedHistory.length > 0 ? sortedHistory[0].date : "",
+      gameHistory: leagueHistory,
+    };
+  }
+
   // Sauvegarder les statistiques dans localStorage
   private saveStats(stats: GameStats): void {
     try {
@@ -63,32 +124,27 @@ export class EnhancedStatsService {
     }
   }
 
-  // Générer un ID pour la partie actuelle (ex: "Counter-Strike #997")
-  public generateGameId(): string {
-    const stats = this.getStats();
-    const gameNumber = stats.gamesPlayed + 1;
-    const gameName = this.config.gameId
-      .split("-")
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join("-");
-
-    return `${gameName} #${gameNumber}`;
-  }
-
   // Enregistrer le résultat d'une partie
   public recordGameResult(result: GameResult): void {
-    const currentDate = new Date().toISOString();
-    const todayDate = currentDate.split("T")[0];
+    const today = new Date().toISOString().split("T")[0];
     const stats = this.getStats();
 
-    // Vérifier si le jeu a déjà été joué aujourd'hui
-    if (stats.lastPlayed === todayDate) {
-      return; // Ne pas enregistrer plusieurs fois le même jour
+    // Générer un ID unique pour cette partie
+    const gameId = `game_${today}_${result.leagueId}`;
+
+    // Vérifier si cette partie a déjà été enregistrée
+    const existingEntryIndex = stats.gameHistory.findIndex(
+      (entry) => entry.id === gameId
+    );
+
+    // Si déjà enregistrée, ne rien faire
+    if (existingEntryIndex !== -1) {
+      return;
     }
 
-    // Mettre à jour les stats
+    // Mettre à jour les statistiques globales
     stats.gamesPlayed += 1;
-    stats.lastPlayed = todayDate;
+    stats.lastPlayed = today;
 
     if (result.won) {
       stats.gamesWon += 1;
@@ -108,21 +164,26 @@ export class EnhancedStatsService {
       stats.currentStreak = 0;
     }
 
-    // Ajouter cette partie à l'historique
-    const guessResults = result.guessResults || [];
-    const gameId = this.generateGameId();
+    // S'assurer que les résultats de devinette sont dans l'ordre chronologique
+    // (du premier essai au dernier)
+    const guessResults = [...result.guessResults];
 
+    // Créer une entrée d'historique
     const historyEntry: GameHistoryEntry = {
       id: gameId,
-      date: currentDate,
-      guessResults,
+      date: today,
       won: result.won,
       attemptsUsed: result.attemptsUsed,
+      guessResults: guessResults,
+      leagueId: result.leagueId,
+      playerName: result.playerName,
     };
 
     // Ajouter en début de liste et limiter la taille
     stats.gameHistory.unshift(historyEntry);
-    stats.gameHistory = stats.gameHistory.slice(0, this.MAX_HISTORY_SIZE);
+    if (stats.gameHistory.length > this.MAX_HISTORY_SIZE) {
+      stats.gameHistory = stats.gameHistory.slice(0, this.MAX_HISTORY_SIZE);
+    }
 
     this.saveStats(stats);
   }
@@ -134,15 +195,48 @@ export class EnhancedStatsService {
     return Math.round((stats.gamesWon / stats.gamesPlayed) * 100);
   }
 
+  // Calculer le taux de victoire pour une ligue spécifique
+  public getWinRateForLeague(leagueId: string): number {
+    const stats = this.getStatsForLeague(leagueId);
+    if (stats.gamesPlayed === 0) return 0;
+    return Math.round((stats.gamesWon / stats.gamesPlayed) * 100);
+  }
+
   // Obtenir la valeur maximale dans la distribution des essais (pour le graphique)
   public getMaxGuessDistributionValue(): number {
     const stats = this.getStats();
     return Math.max(...stats.guessDistribution, 1); // Au moins 1 pour éviter div par 0
   }
 
-  // Récupérer l'historique des parties
+  // Obtenir la valeur maximale dans la distribution des essais pour une ligue spécifique
+  public getMaxGuessDistributionValueForLeague(leagueId: string): number {
+    const stats = this.getStatsForLeague(leagueId);
+    return Math.max(...stats.guessDistribution, 1); // Au moins 1 pour éviter div par 0
+  }
+
+  // Récupérer uniquement l'historique des parties
   public getGameHistory(): GameHistoryEntry[] {
+    return this.getStats().gameHistory;
+  }
+
+  // Récupérer l'historique des parties pour une ligue spécifique
+  public getGameHistoryForLeague(leagueId: string): GameHistoryEntry[] {
+    if (leagueId === "all") {
+      return this.getGameHistory();
+    }
+
+    return this.getGameHistory().filter((game) => {
+      const idMatch = game.id.match(/game_\d{4}-\d{2}-\d{2}_(.+)/);
+      return idMatch && idMatch[1] === leagueId;
+    });
+  }
+
+  // Vérifier si une partie a déjà été jouée aujourd'hui pour une ligue spécifique
+  public hasPlayedToday(leagueId: string): boolean {
+    const today = new Date().toISOString().split("T")[0];
+    const gameId = `game_${today}_${leagueId}`;
     const stats = this.getStats();
-    return stats.gameHistory;
+
+    return stats.gameHistory.some((game) => game.id === gameId);
   }
 }

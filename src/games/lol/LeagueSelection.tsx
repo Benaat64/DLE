@@ -1,7 +1,27 @@
+// src/pages/LeagueSelection.tsx
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { useEnhancedStats } from "../../core/useEnhancedGameStats";
+import HistoryStatsModal from "../../components/HistoryStatsModal";
 
 const LeagueSelection = () => {
   const navigate = useNavigate();
+
+  // Config pour les statistiques globales
+  const statsConfig = {
+    gameId: "lol",
+    maxAttempts: 8,
+    leagueId: "all",
+  };
+
+  // Utiliser notre hook de statistiques avec l'option isGlobalStats à true
+  const {
+    isStatsModalOpen,
+    setStatsModalOpen,
+    statsService,
+    showStats,
+    isGlobalStats,
+  } = useEnhancedStats(statsConfig, { isGlobalStats: true });
 
   const availableLeagues = [
     {
@@ -40,12 +60,20 @@ const LeagueSelection = () => {
 
   return (
     <div className="px-4 py-8 max-w-4xl mx-auto">
-      <div className="mb-6">
+      <div className="mb-6 flex justify-between items-center">
         <button
           onClick={() => navigate("/")}
           className="text-blue-400 hover:text-blue-300 transition-colors"
         >
           ← Back to Home
+        </button>
+
+        {/* Bouton pour afficher les statistiques globales */}
+        <button
+          onClick={showStats}
+          className="text-blue-400 hover:text-blue-300 transition-colors flex items-center"
+        >
+          <span className="mr-2">📊</span> Global Stats
         </button>
       </div>
 
@@ -96,6 +124,15 @@ const LeagueSelection = () => {
           </div>
         ))}
       </div>
+
+      {/* Modal des statistiques globales */}
+      <HistoryStatsModal
+        isOpen={isStatsModalOpen}
+        onClose={() => setStatsModalOpen(false)}
+        statsService={statsService}
+        leagueId="all"
+        isGlobalStats={true}
+      />
     </div>
   );
 };

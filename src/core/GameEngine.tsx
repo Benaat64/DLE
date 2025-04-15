@@ -11,7 +11,8 @@ import { PlayerSearchHelper } from "./PlayerSearchHelper";
 export const useGameEngine = <T extends GameData>(
   adapter: DataAdapter<T>,
   themeConfig: ThemeConfig<T>,
-  selectionStrategy: PlayerSelectionStrategy<T>
+  selectionStrategy: PlayerSelectionStrategy<T>,
+  leagueId: string = "all"
 ) => {
   const [players, setPlayers] = useState<T[]>([]);
   const [guesses, setGuesses] = useState<T[]>([]);
@@ -28,6 +29,52 @@ export const useGameEngine = <T extends GameData>(
   const loadedRef = useRef(false); // Utiliser une ref pour éviter la boucle infinie
 
   const { maxAttempts, enrichPlayerDetails } = themeConfig;
+
+  // Générer une clé unique pour chaque journée et chaque ligue
+  const getDailyKey = useCallback((leagueId: string = "all") => {
+    const today = new Date();
+    return `game_${today.toISOString().split("T")[0]}_${leagueId}`;
+  }, []);
+
+  // Sauvegarder l'état du jeu dans le localStorage
+  const saveGameState = useCallback(
+    (newGuesses: T[], newAttempts: number, isOver: boolean) => {
+      const dailyKey = getDailyKey(leagueId);
+      try {
+        localStorage.setItem(
+          dailyKey,
+          JSON.stringify({
+            guesses: newGuesses,
+            attempts: newAttempts,
+            gameOver: isOver,
+            timestamp: new Date().getTime(),
+          })
+        );
+      } catch (e) {
+        console.error("Error saving game state to localStorage:", e);
+      }
+    },
+    [getDailyKey, leagueId]
+  );
+
+  // Charger l'état du jeu depuis localStorage
+  const loadGameState = useCallback(() => {
+    const dailyKey = getDailyKey(leagueId);
+    try {
+      const savedState = localStorage.getItem(dailyKey);
+      if (savedState) {
+        const {
+          guesses: savedGuesses,
+          attempts: savedAttempts,
+          gameOver: savedGameOver,
+        } = JSON.parse(savedState);
+        return { savedGuesses, savedAttempts, savedGameOver };
+      }
+    } catch (e) {
+      console.error("Error loading game state from localStorage:", e);
+    }
+    return null;
+  }, [getDailyKey, leagueId]);
 
   // Charger les joueurs et initialiser le jeu
   useEffect(() => {
@@ -60,12 +107,20 @@ export const useGameEngine = <T extends GameData>(
           console.log("Joueur sélectionné:", selectedPlayer.name);
 
           // Enrichir le joueur cible avec des détails supplémentaires si nécessaire
+          let enrichedPlayer = selectedPlayer;
           if (enrichPlayerDetails) {
-            const enrichedPlayer = await enrichPlayerDetails(selectedPlayer);
+            enrichedPlayer = await enrichPlayerDetails(selectedPlayer);
             console.log("Joueur avec détails:", enrichedPlayer.name);
-            setTargetPlayer(enrichedPlayer);
-          } else {
-            setTargetPlayer(selectedPlayer);
+          }
+          setTargetPlayer(enrichedPlayer);
+
+          // Charger l'état sauvegardé pour le jour en cours
+          const savedState = loadGameState();
+          if (savedState) {
+            const { savedGuesses, savedAttempts, savedGameOver } = savedState;
+            setGuesses(savedGuesses);
+            setAttempts(savedAttempts);
+            setGameOver(savedGameOver);
           }
         } else {
           console.error("Aucun joueur n'a pu être sélectionné");
@@ -87,11 +142,21 @@ export const useGameEngine = <T extends GameData>(
 
         // Sélectionner et enrichir un joueur de test
         const selectedPlayer = selectionStrategy.selectPlayer(testPlayers);
-        if (selectedPlayer && enrichPlayerDetails) {
-          const enrichedPlayer = await enrichPlayerDetails(selectedPlayer);
+        if (selectedPlayer) {
+          let enrichedPlayer = selectedPlayer;
+          if (enrichPlayerDetails) {
+            enrichedPlayer = await enrichPlayerDetails(selectedPlayer);
+          }
           setTargetPlayer(enrichedPlayer);
-        } else if (selectedPlayer) {
-          setTargetPlayer(selectedPlayer);
+
+          // Charger l'état sauvegardé pour le jour en cours
+          const savedState = loadGameState();
+          if (savedState) {
+            const { savedGuesses, savedAttempts, savedGameOver } = savedState;
+            setGuesses(savedGuesses);
+            setAttempts(savedAttempts);
+            setGameOver(savedGameOver);
+          }
         }
 
         loadedRef.current = true;
@@ -101,7 +166,7 @@ export const useGameEngine = <T extends GameData>(
     };
 
     loadPlayers();
-  }, [adapter, selectionStrategy, enrichPlayerDetails]);
+  }, [adapter, selectionStrategy, enrichPlayerDetails, loadGameState]);
 
   // Gérer les suggestions de recherche
   useEffect(() => {
@@ -136,14 +201,23 @@ export const useGameEngine = <T extends GameData>(
         updatedPlayer = await enrichPlayerDetails(guessedPlayer);
       }
 
-      setGuesses((prev) => [updatedPlayer, ...prev]);
-      setAttempts((prev) => prev + 1);
+      const newGuesses = [updatedPlayer, ...guesses];
+      const newAttempts = attempts + 1;
+      let isGameOver = gameOver;
+
+      setGuesses(newGuesses);
+      setAttempts(newAttempts);
 
       if (guessedPlayer.id === targetPlayer?.id) {
+        isGameOver = true;
         setGameOver(true);
-      } else if (attempts + 1 >= maxAttempts) {
+      } else if (newAttempts >= maxAttempts) {
+        isGameOver = true;
         setGameOver(true);
       }
+
+      // Sauvegarder l'état du jeu après chaque tentative
+      saveGameState(newGuesses, newAttempts, isGameOver);
 
       setInputValue("");
       setSuggestions([]);
@@ -160,6 +234,7 @@ export const useGameEngine = <T extends GameData>(
     attempts,
     maxAttempts,
     targetPlayer,
+    saveGameState,
   ]);
 
   // Sélectionner une suggestion
@@ -169,8 +244,20 @@ export const useGameEngine = <T extends GameData>(
     setShowSuggestions(false);
   }, []);
 
+  // Calculer le temps restant jusqu'à la prochaine partie (minuit)
+  const getTimeUntilNextGame = useCallback(() => {
+    const now = new Date();
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0);
+    return tomorrow.getTime() - now.getTime();
+  }, []);
+
   // Réinitialiser le jeu
   const resetGame = useCallback(() => {
+    // Effacer les données du jour en cours
+    localStorage.removeItem(getDailyKey(leagueId));
+
     // Reset game state
     setGuesses([]);
     setAttempts(0);
@@ -185,7 +272,7 @@ export const useGameEngine = <T extends GameData>(
 
     // Reload will happen in the useEffect since loadedRef is now false
     setLoading(true);
-  }, []);
+  }, [getDailyKey, leagueId]);
 
   // Retourner les propriétés et méthodes nécessaires
   return {
@@ -210,5 +297,6 @@ export const useGameEngine = <T extends GameData>(
     setSelectedPlayer,
     resetGame,
     setShowSuggestions,
+    getTimeUntilNextGame,
   };
 };

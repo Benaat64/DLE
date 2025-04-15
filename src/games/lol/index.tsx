@@ -11,7 +11,78 @@ import HistoryStatsModal from "../../components/HistoryStatsModal";
 import { useEnhancedStats } from "../../core/useEnhancedGameStats";
 import { GuessResult } from "../../core/EnhancedStatsTypes";
 
+// Composant de timer pour afficher le temps restant jusqu'à la prochaine partie
+const CountdownTimer = ({ getTimeUntilNextGame }) => {
+  const [remainingTime, setRemainingTime] = useState<{
+    hours: number;
+    minutes: number;
+    seconds: number;
+  }>({
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+  });
+
+  useEffect(() => {
+    // Calculer le temps initial
+    const updateRemainingTime = () => {
+      const msRemaining = getTimeUntilNextGame();
+
+      // Convertir en heures, minutes, secondes
+      const hours = Math.floor(msRemaining / (1000 * 60 * 60));
+      const minutes = Math.floor(
+        (msRemaining % (1000 * 60 * 60)) / (1000 * 60)
+      );
+      const seconds = Math.floor((msRemaining % (1000 * 60)) / 1000);
+
+      setRemainingTime({ hours, minutes, seconds });
+
+      // Si c'est minuit, recharger la page
+      if (msRemaining <= 0) {
+        window.location.reload();
+      }
+    };
+
+    // Mettre à jour immédiatement
+    updateRemainingTime();
+
+    // Puis toutes les secondes
+    const interval = setInterval(updateRemainingTime, 1000);
+
+    return () => clearInterval(interval);
+  }, [getTimeUntilNextGame]);
+
+  // Formater pour toujours afficher 2 chiffres
+  const format = (num: number) => String(num).padStart(2, "0");
+
+  return (
+    <div className="flex items-center justify-center bg-gray-800 rounded-lg p-4 text-3xl font-mono">
+      <div className="flex items-center">
+        <div className="flex flex-col items-center mx-2">
+          <span className="text-white">{format(remainingTime.hours)}</span>
+          <span className="text-xs text-gray-400">heures</span>
+        </div>
+        <span className="text-white">:</span>
+        <div className="flex flex-col items-center mx-2">
+          <span className="text-white">{format(remainingTime.minutes)}</span>
+          <span className="text-xs text-gray-400">min</span>
+        </div>
+        <span className="text-white">:</span>
+        <div className="flex flex-col items-center mx-2">
+          <span className="text-white">{format(remainingTime.seconds)}</span>
+          <span className="text-xs text-gray-400">sec</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const LOLGame = () => {
+  // État pour le timer jusqu'à la prochaine partie
+  const [timeUntilNextGame, setTimeUntilNextGame] = useState<number | null>(
+    null
+  );
+
   // Récupérer le paramètre de ligue de l'URL
   const { leagueId } = useParams<{ leagueId: string }>();
   const league = leagueId || "all";
@@ -22,7 +93,7 @@ const LOLGame = () => {
   // Toujours utiliser le mode production pour avoir le même joueur chaque jour
   const isDevelopment = false;
 
-  // Configuration des statistiques
+  // Configuration des statistiques spécifiques à cette ligue
   const statsConfig = useMemo(
     () => ({
       gameId: "lol",
@@ -32,7 +103,7 @@ const LOLGame = () => {
     [league]
   );
 
-  // Utiliser notre hook de statistiques amélioré
+  // Utiliser notre hook de statistiques amélioré (spécifique à la ligue)
   const {
     isStatsModalOpen,
     setStatsModalOpen,
@@ -67,7 +138,7 @@ const LOLGame = () => {
     [isDevelopment, leagueFilter, league]
   );
 
-  // Utiliser notre GameEngine pour gérer la logique du jeu
+  // Utiliser notre GameEngine pour gérer la logique du jeu en passant la ligue
   const {
     players,
     guesses,
@@ -87,31 +158,40 @@ const LOLGame = () => {
     setSelectedPlayer,
     resetGame,
     setShowSuggestions,
-  } = useGameEngine<LolPlayerData>(adapter, lolThemeConfig, selectionStrategy);
+    getTimeUntilNextGame,
+  } = useGameEngine<LolPlayerData>(
+    adapter,
+    lolThemeConfig,
+    selectionStrategy,
+    league
+  );
 
   // Convertir les tentatives en résultats pour les statistiques
   // Cette fonction détermine si chaque tentative est correcte, proche ou incorrecte
   const generateGuessResults = (): GuessResult[] => {
     if (!targetPlayer || !guesses.length) return [];
 
-    return guesses.map((guess) => {
-      if (guess.id === targetPlayer.id) {
-        return "correct";
-      }
+    // Inverser les guesses pour qu'ils soient dans l'ordre chronologique (premier au dernier)
+    return guesses
+      .map((guess) => {
+        if (guess.id === targetPlayer.id) {
+          return "correct";
+        }
 
-      // Déterminer si c'est proche ou incorrect
-      // Personnalisez cette logique selon vos règles de jeu
-      const sameTeam = guess.team === targetPlayer.team;
-      const sameRole = guess.role === targetPlayer.role;
-      const sameNationality = guess.nationality === targetPlayer.nationality;
-      const sameLeague = guess.league === targetPlayer.league;
+        // Déterminer si c'est proche ou incorrect
+        // Personnalisez cette logique selon vos règles de jeu
+        const sameTeam = guess.team === targetPlayer.team;
+        const sameRole = guess.role === targetPlayer.role;
+        const sameNationality = guess.nationality === targetPlayer.nationality;
+        const sameLeague = guess.league === targetPlayer.league;
 
-      if (sameTeam || sameRole || sameNationality || sameLeague) {
-        return "close";
-      }
+        if (sameTeam || sameRole || sameNationality || sameLeague) {
+          return "close";
+        }
 
-      return "incorrect";
-    });
+        return "incorrect";
+      })
+      .reverse(); // Inverser pour avoir l'ordre chronologique (premier essai en premier)
   };
 
   // Enregistrer le résultat du jeu lorsqu'il se termine
@@ -122,12 +202,15 @@ const LOLGame = () => {
 
       // Un petit délai pour permettre au joueur de voir le résultat
       const timer = setTimeout(() => {
-        recordGameEnd(won, attempts, guessResults);
+        recordGameEnd(won, attempts, guessResults, targetPlayer.name);
       }, 1500);
 
       return () => clearTimeout(timer);
     }
   }, [gameOver, targetPlayer, guesses, attempts, recordGameEnd]);
+
+  // Afficher un message d'information sur les tentatives sauvegardées
+  const hasSavedGuesses = !loading && guesses.length > 0;
 
   // Titre ajusté en fonction de la ligue sélectionnée
   const gameTitle =
@@ -186,12 +269,12 @@ const LOLGame = () => {
           ← Back to League Selection
         </button>
 
-        {/* Bouton pour afficher les statistiques */}
+        {/* Bouton pour afficher les statistiques de cette ligue */}
         <button
           onClick={showStats}
           className="text-blue-400 hover:text-blue-300 transition-colors flex items-center"
         >
-          <span className="mr-2">📊</span> Stats
+          <span className="mr-2">📊</span> {league.toUpperCase()} Stats
         </button>
       </div>
 
@@ -214,6 +297,16 @@ const LOLGame = () => {
         </div>
       ) : (
         <>
+          {/* Message pour informer que les tentatives ont été restaurées */}
+          {hasSavedGuesses && !gameOver && (
+            <div className="text-blue-400 text-center mb-4 p-3 bg-gray-800 rounded-lg">
+              Vos {attempts} tentative{attempts > 1 ? "s" : ""} précédente
+              {attempts > 1 ? "s" : ""} d'aujourd'hui{" "}
+              {attempts > 1 ? "ont été" : "a été"} restaurée
+              {attempts > 1 ? "s" : ""}.
+            </div>
+          )}
+
           <div className="relative flex items-center mb-8 gap-3">
             <input
               type="text"
@@ -336,19 +429,22 @@ const LOLGame = () => {
           )}
 
           {gameOver && (
-            <div className="flex justify-center mt-8">
-              <button
-                onClick={resetGame}
-                className="px-8 py-4 bg-green-600 text-white rounded-lg hover:bg-green-700 font-semibold tracking-wide text-lg transition-all"
-              >
-                Play Again
-              </button>
+            <div className="flex flex-col items-center mt-8">
+              <div className="text-xl font-semibold text-white mb-2">
+                Nouvelle partie disponible dans
+              </div>
+
+              <CountdownTimer getTimeUntilNextGame={getTimeUntilNextGame} />
+
+              <p className="text-gray-400 mt-4 text-center">
+                Une nouvelle partie sera disponible à minuit (heure locale)
+              </p>
             </div>
           )}
         </>
       )}
 
-      {/* Modal des statistiques avec historique */}
+      {/* Modal des statistiques avec historique pour cette ligue */}
       <HistoryStatsModal
         isOpen={isStatsModalOpen}
         onClose={() => setStatsModalOpen(false)}
@@ -357,6 +453,8 @@ const LOLGame = () => {
         todaysPlayerName={
           gameOver && targetPlayer ? targetPlayer.name : undefined
         }
+        leagueId={league}
+        isGlobalStats={false}
       />
     </div>
   );

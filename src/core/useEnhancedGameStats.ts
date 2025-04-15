@@ -1,48 +1,58 @@
-// src/core/useEnhancedStats.ts
-import { useState, useCallback, useEffect } from "react";
-import { StatsConfig, GameResult, GuessResult } from "./EnhancedStatsTypes";
+// src/core/useEnhancedGameStats.ts
+import { useState, useCallback, useMemo } from "react";
 import { EnhancedStatsService } from "./EnhancedStatsService";
+import { GameResult, StatsConfig, GuessResult } from "./EnhancedStatsTypes";
 
-export const useEnhancedStats = (config: StatsConfig) => {
+export interface UseEnhancedStatsOptions {
+  isGlobalStats?: boolean;
+}
+
+export const useEnhancedStats = (
+  config: StatsConfig,
+  options: UseEnhancedStatsOptions = {}
+) => {
+  const { isGlobalStats = false } = options;
   const [isStatsModalOpen, setStatsModalOpen] = useState(false);
   const [gameResult, setGameResult] = useState<GameResult | null>(null);
-  // Créer le service de statistiques
-  const [statsService] = useState(() => new EnhancedStatsService(config));
 
-  // Vérifier s'il s'agit d'un nouveau jour
-  useEffect(() => {
-    const stats = statsService.getStats();
-    const today = new Date().toISOString().split("T")[0];
+  // Créer le service de statistiques une seule fois
+  const statsService = useMemo(
+    () => new EnhancedStatsService(config),
+    [config]
+  );
 
-    // Si le jeu a déjà été joué aujourd'hui, on peut restaurer l'état précédent
-    if (stats.lastPlayed === today) {
-      // Si nécessaire, vous pouvez ajouter une logique pour restaurer l'état du jeu
-    }
-  }, [statsService]);
-
-  // Enregistrer le résultat d'une partie
+  // Enregistrer le résultat de la partie
   const recordGameEnd = useCallback(
-    (won: boolean, attemptsUsed: number, guessResults: GuessResult[] = []) => {
+    (
+      won: boolean,
+      attemptsUsed: number,
+      guessResults: GuessResult[],
+      playerName?: string
+    ) => {
       const result: GameResult = {
         won,
         attemptsUsed,
         guessResults,
+        playerName,
+        leagueId: config.leagueId,
       };
-
-      setGameResult(result);
-      setStatsModalOpen(true);
 
       // Enregistrer le résultat
       statsService.recordGameResult(result);
+      setGameResult(result);
     },
-    [statsService]
+    [config.leagueId, statsService]
   );
 
-  // Ouvrir la modal de statistiques sans enregistrer de résultat
+  // Afficher la modal des statistiques
   const showStats = useCallback(() => {
-    setGameResult(null);
     setStatsModalOpen(true);
   }, []);
+
+  // Vérifier si une partie a déjà été jouée aujourd'hui pour cette ligue
+  const hasPlayedToday = useMemo(() => {
+    return statsService.hasPlayedToday(config.leagueId);
+  }, [config.leagueId, statsService]);
 
   return {
     isStatsModalOpen,
@@ -51,5 +61,7 @@ export const useEnhancedStats = (config: StatsConfig) => {
     statsService,
     recordGameEnd,
     showStats,
+    hasPlayedToday,
+    isGlobalStats,
   };
 };
