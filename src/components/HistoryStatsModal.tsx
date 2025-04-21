@@ -1,5 +1,5 @@
 // src/components/HistoryStatsModal.tsx
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   GameStats,
   GameResult,
@@ -26,8 +26,8 @@ const StatBox = ({
   label: string;
   value: number | string;
 }) => (
-  <div className="bg-gray-800 rounded p-3 text-center">
-    <div className="text-2xl font-bold text-white">{value}</div>
+  <div className="bg-gray-800 rounded p-2 sm:p-3 text-center">
+    <div className="text-xl sm:text-2xl font-bold text-white">{value}</div>
     <div className="text-xs text-gray-400 mt-1 uppercase">{label}</div>
   </div>
 );
@@ -140,7 +140,7 @@ const HistoryStatsModal = ({
     if (activeTab === "stats") {
       return (
         <div className="stats-content">
-          <h2 className="text-2xl font-bold text-white text-center mb-6">
+          <h2 className="text-xl sm:text-2xl font-bold text-white text-center mb-4 sm:mb-6">
             {isGlobalStats
               ? "Global Statistics"
               : `${getLeagueTitle(leagueId)} Statistics`}
@@ -148,14 +148,14 @@ const HistoryStatsModal = ({
 
           {/* Résultat de la partie actuelle si disponible */}
           {gameResult && (
-            <div className="mb-6 text-center">
+            <div className="mb-4 sm:mb-6 text-center">
               {gameResult.won ? (
-                <div className="text-green-400 text-lg font-semibold mb-2">
+                <div className="text-green-400 text-base sm:text-lg font-semibold mb-2">
                   You won in {gameResult.attemptsUsed}{" "}
                   {gameResult.attemptsUsed === 1 ? "try" : "tries"}!
                 </div>
               ) : (
-                <div className="text-yellow-400 text-lg font-semibold mb-2">
+                <div className="text-yellow-400 text-base sm:text-lg font-semibold mb-2">
                   Game Over!
                   {todaysPlayerName && (
                     <div>The player was {todaysPlayerName}</div>
@@ -166,7 +166,7 @@ const HistoryStatsModal = ({
           )}
 
           {/* Principales statistiques */}
-          <div className="grid grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mb-6 sm:mb-8">
             <StatBox label="GAMES PLAYED" value={stats.gamesPlayed} />
             <StatBox label="WIN %" value={winRate} />
             <StatBox label="CURRENT STREAK" value={stats.currentStreak} />
@@ -174,21 +174,23 @@ const HistoryStatsModal = ({
           </div>
 
           {/* Distribution des essais */}
-          <div className="mb-8">
-            <h3 className="text-lg font-semibold text-white uppercase mb-3">
+          <div className="mb-6 sm:mb-8">
+            <h3 className="text-base sm:text-lg font-semibold text-white uppercase mb-2 sm:mb-3">
               Guess Distribution
             </h3>
 
             {stats.gamesPlayed === 0 ? (
-              <div className="text-gray-400 text-center py-4">
+              <div className="text-gray-400 text-center py-3 sm:py-4">
                 No data yet. Play some games!
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-1 sm:space-y-2">
                 {stats.guessDistribution.map((count, index) => (
                   <div key={index} className="flex items-center">
-                    <div className="text-white mr-3 w-4">{index + 1}</div>
-                    <div className="flex-1 h-8 flex items-center">
+                    <div className="text-white mr-2 sm:mr-3 w-4 text-sm sm:text-base">
+                      {index + 1}
+                    </div>
+                    <div className="flex-1 h-6 sm:h-8 flex items-center">
                       <div
                         className={`h-full ${
                           gameResult &&
@@ -206,7 +208,7 @@ const HistoryStatsModal = ({
                         }}
                       >
                         {count > 0 && (
-                          <span className="text-white px-3 text-sm flex h-full items-center font-medium">
+                          <span className="text-white px-2 sm:px-3 text-xs sm:text-sm flex h-full items-center font-medium">
                             {count}
                           </span>
                         )}
@@ -220,32 +222,32 @@ const HistoryStatsModal = ({
 
           {/* Historique des parties précédentes */}
           {stats.gameHistory.length > 0 && (
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold text-white uppercase mb-3">
+            <div className="mb-4 sm:mb-6">
+              <h3 className="text-base sm:text-lg font-semibold text-white uppercase mb-2 sm:mb-3">
                 Previous Games
               </h3>
 
               {shouldGroupByLeague ? (
                 // Affichage par ligue (pour les statistiques globales)
-                <div className="max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-700">
+                <div className="max-h-60 sm:max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-700">
                   {sortedLeagues.map((league) => (
-                    <div key={league} className="mb-4">
-                      <div className="flex justify-between items-center border-b border-gray-700 py-2 mb-2">
-                        <h4 className="text-md font-semibold text-white">
+                    <div key={league} className="mb-3 sm:mb-4">
+                      <div className="flex justify-between items-center border-b border-gray-700 py-1 sm:py-2 mb-1 sm:mb-2">
+                        <h4 className="text-sm sm:text-md font-semibold text-white">
                           {getLeagueTitle(league)}
                         </h4>
-                        <span className="text-sm text-gray-400">
+                        <span className="text-xs sm:text-sm text-gray-400">
                           {leagueCounts[league]} game
                           {leagueCounts[league] !== 1 ? "s" : ""}
                         </span>
                       </div>
-                      <div className="space-y-3">
+                      <div className="space-y-2 sm:space-y-3">
                         {gamesByLeague[league].map((game, index) => (
                           <div
                             key={index}
                             className="flex items-center hover:bg-gray-800 p-1 rounded"
                           >
-                            <div className="text-white mr-3 flex-shrink-0 w-24 text-sm">
+                            <div className="text-white mr-2 sm:mr-3 flex-shrink-0 w-16 sm:w-24 text-xs sm:text-sm">
                               {formatGameId(game.id, league)}
                             </div>
                             <div className="flex space-x-1 flex-1">
@@ -255,7 +257,7 @@ const HistoryStatsModal = ({
                                 .map((result, idx) => (
                                   <div
                                     key={idx}
-                                    className={`w-6 h-6 ${
+                                    className={`w-5 h-5 sm:w-6 sm:h-6 ${
                                       result === "correct"
                                         ? "bg-green-500"
                                         : result === "close"
@@ -285,8 +287,8 @@ const HistoryStatsModal = ({
                 </div>
               ) : (
                 // Affichage simple pour une ligue spécifique
-                <div className="max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-700">
-                  <div className="space-y-3">
+                <div className="max-h-60 sm:max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-700">
+                  <div className="space-y-2 sm:space-y-3">
                     {/* Trier par date (du plus récent au plus ancien) */}
                     {[...stats.gameHistory]
                       .sort(
@@ -299,7 +301,7 @@ const HistoryStatsModal = ({
                           key={index}
                           className="flex items-center hover:bg-gray-800 p-1 rounded"
                         >
-                          <div className="text-white mr-3 flex-shrink-0 w-16 text-sm">
+                          <div className="text-white mr-2 sm:mr-3 flex-shrink-0 w-12 sm:w-16 text-xs sm:text-sm">
                             {formatGameId(game.id, leagueId)}
                           </div>
                           <div className="flex space-x-1 flex-1">
@@ -309,7 +311,7 @@ const HistoryStatsModal = ({
                               .map((result, idx) => (
                                 <div
                                   key={idx}
-                                  className={`w-6 h-6 ${
+                                  className={`w-5 h-5 sm:w-6 sm:h-6 ${
                                     result === "correct"
                                       ? "bg-green-500"
                                       : result === "close"
@@ -338,64 +340,46 @@ const HistoryStatsModal = ({
               )}
             </div>
           )}
-
-          {/* Bouton de fermeture */}
-          <div className="flex justify-center mt-8">
-            <button
-              onClick={onClose}
-              className="px-8 py-3 bg-yellow-400 text-black font-bold rounded-lg hover:bg-yellow-300 transition-colors uppercase"
-            >
-              OK, Got it
-            </button>
-          </div>
         </div>
       );
     } else {
       // Affichage de l'onglet "How to play"
       return (
         <div className="how-to-play-content">
-          <h2 className="text-2xl font-bold text-white text-center mb-6">
+          <h2 className="text-xl sm:text-2xl font-bold text-white text-center mb-4 sm:mb-6">
             How to play
           </h2>
 
-          <p className="text-white mb-6">
+          <p className="text-white mb-4 sm:mb-6 text-sm sm:text-base">
             You have 8 attempts to guess the mystery LOL player. Every day there
             will be a new player to guess for each league!
           </p>
 
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold text-white uppercase mb-4">
+          <div className="mb-4 sm:mb-6">
+            <h3 className="text-base sm:text-lg font-semibold text-white uppercase mb-2 sm:mb-4">
               Results
             </h3>
 
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               <div className="flex items-center">
-                <div className="w-6 h-6 bg-green-500 mr-4"></div>
-                <p className="text-white">Correct match</p>
+                <div className="w-5 h-5 sm:w-6 sm:h-6 bg-green-500 mr-3 sm:mr-4"></div>
+                <p className="text-white text-sm sm:text-base">Correct match</p>
               </div>
 
               <div className="flex items-center">
-                <div className="w-6 h-6 bg-orange-500 mr-4"></div>
-                <p className="text-white">
+                <div className="w-5 h-5 sm:w-6 sm:h-6 bg-orange-500 mr-3 sm:mr-4"></div>
+                <p className="text-white text-sm sm:text-base">
                   Partial match (same team, role, nationality or league)
                 </p>
               </div>
 
               <div className="flex items-center">
-                <div className="w-6 h-6 bg-gray-700 mr-4"></div>
-                <p className="text-white">Incorrect match</p>
+                <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gray-700 mr-3 sm:mr-4"></div>
+                <p className="text-white text-sm sm:text-base">
+                  Incorrect match
+                </p>
               </div>
             </div>
-          </div>
-
-          {/* Bouton de fermeture */}
-          <div className="flex justify-center mt-8">
-            <button
-              onClick={onClose}
-              className="px-8 py-3 bg-yellow-400 text-black font-bold rounded-lg hover:bg-yellow-300 transition-colors uppercase"
-            >
-              OK, Got it
-            </button>
           </div>
         </div>
       );
@@ -404,23 +388,22 @@ const HistoryStatsModal = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
-      <div className="bg-gray-900 rounded-lg max-w-md w-full mx-4 overflow-hidden shadow-xl relative">
-        <div className="p-6">
-          {/* Bouton de fermeture en haut à droite */}
-          <div className="absolute top-2 right-2">
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-white transition-colors p-2"
-            >
-              ✕
-            </button>
-          </div>
+      <div className="bg-gray-900 rounded-lg w-full max-w-md mx-4 overflow-auto max-h-[90vh] shadow-xl relative">
+        {/* Grande flèche de retour en haut à gauche */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 left-4 text-white hover:text-gray-300 transition-colors z-10 text-2xl"
+          aria-label="Back"
+        >
+          ←
+        </button>
 
+        <div className="p-4 pt-12 sm:p-6 sm:pt-14">
           {/* En-tête avec onglets */}
-          <div className="flex justify-center mb-8 border-b border-gray-700">
+          <div className="flex justify-center mb-6 sm:mb-8 border-b border-gray-700">
             <button
               onClick={() => setActiveTab("howToPlay")}
-              className={`px-4 py-2 text-white ${
+              className={`px-3 sm:px-4 py-2 text-sm sm:text-base text-white ${
                 activeTab === "howToPlay"
                   ? "border-b-2 border-white"
                   : "opacity-70"
@@ -430,7 +413,7 @@ const HistoryStatsModal = ({
             </button>
             <button
               onClick={() => setActiveTab("stats")}
-              className={`px-4 py-2 text-white ${
+              className={`px-3 sm:px-4 py-2 text-sm sm:text-base text-white ${
                 activeTab === "stats" ? "border-b-2 border-white" : "opacity-70"
               }`}
             >

@@ -1,5 +1,5 @@
 // src/components/StatsModal.tsx
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { GameStats, GameResult, StatsConfig } from "../core/types";
 import { StatsService } from "../core/StatsService";
 
@@ -12,14 +12,14 @@ export interface StatsModalProps {
   todaysPlayerName?: string; // Nom du joueur à deviner aujourd'hui
 }
 
-const StatsModal: React.FC<StatsModalProps> = ({
+const StatsModal = ({
   isOpen,
   onClose,
   config,
   statsService, // Utiliser cette prop au lieu de créer un nouveau service
   gameResult,
   todaysPlayerName,
-}) => {
+}: StatsModalProps) => {
   const [stats, setStats] = useState<GameStats | null>(null);
 
   // Charger les statistiques lors de l'ouverture de la modal
@@ -65,27 +65,30 @@ const StatsModal: React.FC<StatsModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
-      <div className="bg-gray-800 rounded-lg max-w-md w-full mx-4 overflow-hidden shadow-xl">
-        <div className="p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-white">Statistics</h2>
+      <div className="bg-gray-800 rounded-lg w-full max-w-md mx-4 overflow-auto max-h-[90vh] shadow-xl">
+        <div className="p-4 sm:p-6">
+          <div className="flex justify-between items-center mb-4 sm:mb-6">
+            <h2 className="text-xl sm:text-2xl font-bold text-white">
+              Statistics
+            </h2>
+            {/* Flèche de retour au lieu du bouton X */}
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-white"
+              className="text-blue-400 hover:text-blue-300 transition-colors"
             >
-              ✕
+              ← Back
             </button>
           </div>
 
           {gameResult && (
-            <div className="mb-6 text-center">
+            <div className="mb-4 sm:mb-6 text-center">
               {gameResult.won ? (
-                <div className="text-green-400 text-lg font-semibold mb-2">
+                <div className="text-green-400 text-base sm:text-lg font-semibold mb-2">
                   You won in {gameResult.attemptsUsed}{" "}
                   {gameResult.attemptsUsed === 1 ? "try" : "tries"}!
                 </div>
               ) : (
-                <div className="text-yellow-400 text-lg font-semibold mb-2">
+                <div className="text-yellow-400 text-base sm:text-lg font-semibold mb-2">
                   Game Over!
                   {todaysPlayerName && (
                     <div>The player was {todaysPlayerName}</div>
@@ -98,7 +101,7 @@ const StatsModal: React.FC<StatsModalProps> = ({
             </div>
           )}
 
-          <div className="grid grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-6">
             <StatBox label="Played" value={stats.gamesPlayed} />
             <StatBox label="Win %" value={`${winRate}%`} />
             <StatBox label="Current Streak" value={stats.currentStreak} />
@@ -106,20 +109,22 @@ const StatsModal: React.FC<StatsModalProps> = ({
           </div>
 
           <div className="mb-4">
-            <h3 className="text-lg font-semibold text-white mb-2">
+            <h3 className="text-base sm:text-lg font-semibold text-white mb-2">
               Guess Distribution
             </h3>
 
             {stats.gamesPlayed === 0 ? (
-              <div className="text-gray-400 text-center py-4">
+              <div className="text-gray-400 text-center py-3 sm:py-4">
                 No data yet. Play some games!
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-1 sm:space-y-2">
                 {stats.guessDistribution.map((count, index) => (
                   <div key={index} className="flex items-center">
-                    <div className="text-white mr-2 w-4">{index + 1}</div>
-                    <div className="flex-1 h-8 flex items-center">
+                    <div className="text-white mr-2 w-4 text-sm sm:text-base">
+                      {index + 1}
+                    </div>
+                    <div className="flex-1 h-6 sm:h-8 flex items-center">
                       <div
                         className={`h-full ${
                           gameResult &&
@@ -135,7 +140,7 @@ const StatsModal: React.FC<StatsModalProps> = ({
                         }}
                       >
                         {count > 0 && (
-                          <span className="text-white px-2 text-sm flex h-full items-center">
+                          <span className="text-white px-2 text-xs sm:text-sm flex h-full items-center">
                             {count}
                           </span>
                         )}
@@ -147,14 +152,7 @@ const StatsModal: React.FC<StatsModalProps> = ({
             )}
           </div>
 
-          <div className="mt-6 pt-4 border-t border-gray-700">
-            <button
-              onClick={onClose}
-              className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Close
-            </button>
-          </div>
+          {/* Suppression du bouton Close en bas */}
         </div>
       </div>
     </div>
@@ -162,12 +160,15 @@ const StatsModal: React.FC<StatsModalProps> = ({
 };
 
 // Composant pour afficher une statistique
-const StatBox: React.FC<{ label: string; value: number | string }> = ({
+const StatBox = ({
   label,
   value,
+}: {
+  label: string;
+  value: number | string;
 }) => (
-  <div className="bg-gray-700 rounded p-3 text-center">
-    <div className="text-2xl font-bold text-white">{value}</div>
+  <div className="bg-gray-700 rounded p-2 sm:p-3 text-center">
+    <div className="text-xl sm:text-2xl font-bold text-white">{value}</div>
     <div className="text-xs text-gray-300">{label}</div>
   </div>
 );
