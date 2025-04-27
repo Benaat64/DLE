@@ -52,7 +52,7 @@ export const fetchPlayerDetailsFromCargo = async (
       league ? `&league=${encodeURIComponent(league)}` : ""
     }${role ? `&role=${encodeURIComponent(role)}` : ""}`;
 
-    console.log(`Requête API details joueur: ${url}`);
+    // console.log(`Requête API details joueur: ${url}`);
 
     const response = await fetch(url);
     if (!response.ok) {
@@ -60,7 +60,7 @@ export const fetchPlayerDetailsFromCargo = async (
     }
 
     const data = await response.json();
-    console.log(`Données reçues pour ${playerName}:`, data);
+    // console.log(`Données reçues pour ${playerName}:`, data);
 
     // Créer l'objet résultat
     const result: {
@@ -112,7 +112,7 @@ export const fetchPlayerDetailsFromCargo = async (
           tiktok: data.socialMedia.tiktok || undefined,
           discord: data.socialMedia.discord || undefined,
         };
-        console.log("Réseaux sociaux trouvés:", result.socialMedia);
+        // console.log("Réseaux sociaux trouvés:", result.socialMedia);
       }
     }
 

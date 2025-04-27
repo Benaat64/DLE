@@ -57,10 +57,10 @@ export const fetchFromLeaguepedia = async <T>(
   cacheKey?: string
 ): Promise<T> => {
   // Si une clé de cache est fournie et que le cache est valide, retourner les données du cache
-  if (cacheKey && isCacheValid(cacheKey)) {
-    console.log(`Utilisation du cache pour ${cacheKey}`);
-    return cache[cacheKey].data;
-  }
+  // if (cacheKey && isCacheValid(cacheKey)) {
+  //   console.log(`Utilisation du cache pour ${cacheKey}`);
+  //   return cache[cacheKey].data;
+  // }
 
   try {
     // Paramètres par défaut pour toutes les requêtes
