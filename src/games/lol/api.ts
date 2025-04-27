@@ -2,6 +2,9 @@ import { DataAdapter } from "../../core/types";
 import { LolPlayerData } from "./types";
 import { getCountryCode } from "../../utils/countriesUtil";
 
+// URL de base de l'API backend
+const API_BASE_URL = "https://dle.onrender.com";
+
 // Liste des ligues majeures à inclure
 const MAJOR_LEAGUES = ["LEC", "LCK", "LCS", "LPL", "LTA North", "LTA South"];
 
@@ -43,7 +46,7 @@ export const fetchPlayerDetailsFromCargo = async (
   signatureChampions?: string[];
 }> => {
   try {
-    const url = `http://localhost:5000/api/cargo?playerName=${encodeURIComponent(
+    const url = `${API_BASE_URL}/api/cargo?playerName=${encodeURIComponent(
       playerName
     )}${team ? `&team=${encodeURIComponent(team)}` : ""}${
       league ? `&league=${encodeURIComponent(league)}` : ""
