@@ -3,7 +3,7 @@ import { LolPlayerData } from "./types";
 import { getCountryCode } from "../../utils/countriesUtil";
 
 // URL de base de l'API backend
-const API_BASE_URL = "https://dle.onrender.com";
+const API_BASE_URL = "https://dlee-a2ew.onrender.com";
 
 // Liste des ligues majeures à inclure
 const MAJOR_LEAGUES = ["LEC", "LCK", "LCS", "LPL", "LTA North", "LTA South"];
@@ -46,6 +46,7 @@ export const fetchPlayerDetailsFromCargo = async (
   signatureChampions?: string[];
 }> => {
   try {
+    console.log(`Chargement du joueur: ${playerName}`);
     const url = `${API_BASE_URL}/api/cargo?playerName=${encodeURIComponent(
       playerName
     )}${team ? `&team=${encodeURIComponent(team)}` : ""}${

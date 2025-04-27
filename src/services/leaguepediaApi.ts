@@ -4,7 +4,7 @@ import { GameData } from "../components/GameTable/types";
 
 // Configuration de base pour l'API Leaguepedia
 const LEAGUEPEDIA_API_URL = "https://lol.fandom.com/api.php";
-const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 heures en millisecondes
+// const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 heures en millisecondes
 
 // Interface pour le cache
 interface CacheItem<T> {
@@ -42,12 +42,12 @@ const cache: Record<string, CacheItem<any>> = {};
 /**
  * Fonction utilitaire pour vérifier si une entrée du cache est valide
  */
-const isCacheValid = (cacheKey: string): boolean => {
-  if (!cache[cacheKey]) return false;
+// const isCacheValid = (cacheKey: string): boolean => {
+//   if (!cache[cacheKey]) return false;
 
-  const now = Date.now();
-  return now - cache[cacheKey].timestamp < CACHE_DURATION;
-};
+//   const now = Date.now();
+//   return now - cache[cacheKey].timestamp < CACHE_DURATION;
+// };
 
 /**
  * Fonction générique pour faire des requêtes à l'API Leaguepedia
