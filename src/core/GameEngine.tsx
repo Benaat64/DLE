@@ -203,21 +203,20 @@ export const useGameEngine = <T extends GameData>(
 
       const newGuesses = [updatedPlayer, ...guesses];
       const newAttempts = attempts + 1;
-      let isGameOver = gameOver;
+
+      // Calculer si le jeu est terminé
+      const newIsGameOver =
+        guessedPlayer.id === targetPlayer?.id || newAttempts >= maxAttempts;
 
       setGuesses(newGuesses);
       setAttempts(newAttempts);
 
-      if (guessedPlayer.id === targetPlayer?.id) {
-        isGameOver = true;
-        setGameOver(true);
-      } else if (newAttempts >= maxAttempts) {
-        isGameOver = true;
+      if (newIsGameOver) {
         setGameOver(true);
       }
 
       // Sauvegarder l'état du jeu après chaque tentative
-      saveGameState(newGuesses, newAttempts, isGameOver);
+      saveGameState(newGuesses, newAttempts, newIsGameOver);
 
       setInputValue("");
       setSuggestions([]);

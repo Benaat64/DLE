@@ -1,6 +1,5 @@
 // src/services/leaguepediaPlayerDetails.ts
 import axios from "axios";
-import { GameData } from "../components/GameTable/types";
 
 // Point d'entrée de l'API
 const LEAGUEPEDIA_API_URL = "https://lol.fandom.com/api.php";

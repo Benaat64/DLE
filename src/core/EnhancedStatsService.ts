@@ -4,7 +4,7 @@ import {
   StatsConfig,
   GameResult,
   GameHistoryEntry,
-  GuessResult,
+  // GuessResult est utilisé implicitement via GameHistoryEntry.guessResults
 } from "./EnhancedStatsTypes";
 
 export class EnhancedStatsService {

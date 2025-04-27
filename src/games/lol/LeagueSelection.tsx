@@ -1,6 +1,6 @@
 // src/pages/LeagueSelection.tsx
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+// Suppression de l'import de useState qui n'est pas utilisé
 import { useEnhancedStats } from "../../core/useEnhancedGameStats";
 import HistoryStatsModal from "../../components/HistoryStatsModal";
 
@@ -20,7 +20,7 @@ const LeagueSelection = () => {
     setStatsModalOpen,
     statsService,
     showStats,
-    isGlobalStats,
+    // Suppression de isGlobalStats qui n'est pas utilisé
   } = useEnhancedStats(statsConfig, { isGlobalStats: true });
 
   const availableLeagues = [

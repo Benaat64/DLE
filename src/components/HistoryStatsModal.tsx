@@ -1,11 +1,6 @@
 // src/components/HistoryStatsModal.tsx
 import { useEffect, useState } from "react";
-import {
-  GameStats,
-  GameResult,
-  GuessResult,
-  GameHistoryEntry,
-} from "../core/EnhancedStatsTypes";
+import { GameStats, GameResult } from "../core/EnhancedStatsTypes";
 import { EnhancedStatsService } from "../core/EnhancedStatsService";
 
 export interface HistoryStatsModalProps {
@@ -46,7 +41,7 @@ const HistoryStatsModal = ({
 
   // Obtenir le titre de la ligue pour l'affichage
   const getLeagueTitle = (id: string): string => {
-    const leagues = {
+    const leagues: Record<string, string> = {
       all: "All Leagues",
       lec: "LEC",
       lck: "LCK",
@@ -86,41 +81,48 @@ const HistoryStatsModal = ({
   const shouldGroupByLeague = isGlobalStats;
 
   // Si on affiche les stats globales, organiser par ligue
-  let gamesByLeague = {};
-  let sortedLeagues = [];
-  let leagueCounts = {};
+  let gamesByLeague: Record<string, any[]> = {};
+  let sortedLeagues: string[] = [];
+  let leagueCounts: Record<string, number> = {};
 
   if (shouldGroupByLeague) {
     // Organiser l'historique des parties par ligue
-    gamesByLeague = stats.gameHistory.reduce((acc, game) => {
-      // Extraire la ligue du jeu à partir de l'ID (format : "game_YYYY-MM-DD_leagueId")
-      const leagueMatch = game.id.match(/game_\d{4}-\d{2}-\d{2}_(.+)/);
-      const league = leagueMatch ? leagueMatch[1].toUpperCase() : "UNKNOWN";
+    gamesByLeague = stats.gameHistory.reduce(
+      (acc: Record<string, any[]>, game) => {
+        // Extraire la ligue du jeu à partir de l'ID (format : "game_YYYY-MM-DD_leagueId")
+        const leagueMatch = game.id.match(/game_\d{4}-\d{2}-\d{2}_(.+)/);
+        const league = leagueMatch ? leagueMatch[1].toUpperCase() : "UNKNOWN";
 
-      if (!acc[league]) {
-        acc[league] = [];
-      }
+        if (!acc[league]) {
+          acc[league] = [];
+        }
 
-      acc[league].push(game);
-      return acc;
-    }, {});
+        acc[league].push(game);
+        return acc;
+      },
+      {}
+    );
 
     // Trier les ligues par nom
     sortedLeagues = Object.keys(gamesByLeague).sort();
 
     // Compter le nombre de parties par ligue
-    leagueCounts = sortedLeagues.reduce((acc, league) => {
-      acc[league] = gamesByLeague[league].length;
-      return acc;
-    }, {});
+    leagueCounts = sortedLeagues.reduce(
+      (acc: Record<string, number>, league) => {
+        acc[league] = gamesByLeague[league].length;
+        return acc;
+      },
+      {} as Record<string, number>
+    );
   }
 
   // Formatter l'ID du jeu pour l'affichage
   const formatGameId = (gameId: string, league: string) => {
     if (shouldGroupByLeague) {
-      // Format global : "LEC #1", "LCK #2", etc.
       const gameNumber =
-        gamesByLeague[league].findIndex((g) => g.id === gameId) + 1;
+        gamesByLeague[league].findIndex(
+          (g: { id: string }) => g.id === gameId
+        ) + 1;
       return `${league} #${gameNumber}`;
     } else {
       // Format spécifique à une ligue : "#1", "#2", etc.
@@ -242,45 +244,47 @@ const HistoryStatsModal = ({
                         </span>
                       </div>
                       <div className="space-y-2 sm:space-y-3">
-                        {gamesByLeague[league].map((game, index) => (
-                          <div
-                            key={index}
-                            className="flex items-center hover:bg-gray-800 p-1 rounded"
-                          >
-                            <div className="text-white mr-2 sm:mr-3 flex-shrink-0 w-16 sm:w-24 text-xs sm:text-sm">
-                              {formatGameId(game.id, league)}
-                            </div>
-                            <div className="flex space-x-1 flex-1">
-                              {/* Inverser l'ordre des résultats pour afficher dans l'ordre chronologique */}
-                              {[...game.guessResults]
-                                .reverse()
-                                .map((result, idx) => (
-                                  <div
-                                    key={idx}
-                                    className={`w-5 h-5 sm:w-6 sm:h-6 ${
-                                      result === "correct"
-                                        ? "bg-green-500"
-                                        : result === "close"
-                                        ? "bg-orange-500"
-                                        : "bg-gray-700"
-                                    }`}
-                                    title={
-                                      result === "correct"
-                                        ? "Correct"
-                                        : result === "close"
-                                        ? "Close"
-                                        : "Incorrect"
-                                    }
-                                  />
-                                ))}
-                            </div>
-                            {game.playerName && (
-                              <div className="text-gray-400 text-xs ml-2">
-                                {game.playerName}
+                        {gamesByLeague[league].map(
+                          (game: any, index: number) => (
+                            <div
+                              key={index}
+                              className="flex items-center hover:bg-gray-800 p-1 rounded"
+                            >
+                              <div className="text-white mr-2 sm:mr-3 flex-shrink-0 w-16 sm:w-24 text-xs sm:text-sm">
+                                {formatGameId(game.id, league)}
                               </div>
-                            )}
-                          </div>
-                        ))}
+                              <div className="flex space-x-1 flex-1">
+                                {/* Inverser l'ordre des résultats pour afficher dans l'ordre chronologique */}
+                                {[...game.guessResults]
+                                  .reverse()
+                                  .map((result, idx) => (
+                                    <div
+                                      key={idx}
+                                      className={`w-5 h-5 sm:w-6 sm:h-6 ${
+                                        result === "correct"
+                                          ? "bg-green-500"
+                                          : result === "close"
+                                          ? "bg-orange-500"
+                                          : "bg-gray-700"
+                                      }`}
+                                      title={
+                                        result === "correct"
+                                          ? "Correct"
+                                          : result === "close"
+                                          ? "Close"
+                                          : "Incorrect"
+                                      }
+                                    />
+                                  ))}
+                              </div>
+                              {game.playerName && (
+                                <div className="text-gray-400 text-xs ml-2">
+                                  {game.playerName}
+                                </div>
+                              )}
+                            </div>
+                          )
+                        )}
                       </div>
                     </div>
                   ))}

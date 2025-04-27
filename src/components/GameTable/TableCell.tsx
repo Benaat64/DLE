@@ -4,7 +4,7 @@ import { rendererMap } from "../renderers";
 interface TableCellProps {
   column: Column;
   value: any;
-  item?: GameData; // S'assurer que cette prop est définie
+  item?: GameData;
   correctValue?: any;
   isCorrect?: boolean;
   colorMapping?: ColorMapping;
@@ -14,26 +14,24 @@ interface TableCellProps {
 function TableCell({
   column,
   value,
-  item, // Utiliser cette prop
+  item,
   correctValue,
   isCorrect,
   colorMapping,
-  allPlayers,
 }: TableCellProps) {
-  // Log pour voir si item est correctement passé
-  console.log(`TableCell - Column: ${column.id}, Value: ${value}, Item:`, item);
-
-  const Renderer = rendererMap[column.renderer] || rendererMap.text;
+  // Correction 1: Ajout d'une vérification de type sûre
+  const rendererKey = column.renderer as keyof typeof rendererMap;
+  const Renderer = rendererMap[rendererKey] || rendererMap.text;
 
   // Déterminer la classe de couleur
   let colorClass = "";
   if (colorMapping && correctValue !== undefined) {
-    // Utiliser la fonction compare du colorMapping
+    // Correction 2: Suppression du paramètre allPlayers
     colorClass = colorMapping.compare(
       value,
       correctValue,
-      column.id,
-      allPlayers
+      column.id
+      // Retirer allPlayers ici
     );
   }
 
@@ -49,7 +47,7 @@ function TableCell({
     >
       <Renderer
         value={value}
-        countryCode={item?.countryCode} // Passer la prop countryCode
+        countryCode={item?.countryCode}
         correctValue={correctValue}
         isCorrect={isCorrect}
       />

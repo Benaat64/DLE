@@ -7,7 +7,7 @@ export interface EnhancedStatsModalProps {
   onClose: () => void;
   statsService: StatsService;
   gameResult?: GameResult | null;
-  todaysPlayerName?: string;
+
   gameId: string; // Identifiant du jeu (ex: "lol", "cs", etc.)
   maxAttempts: number;
   previousGames?: PreviousGame[]; // Historique des parties précédentes
@@ -25,7 +25,7 @@ const EnhancedStatsModal: React.FC<EnhancedStatsModalProps> = ({
   onClose,
   statsService,
   gameResult,
-  todaysPlayerName,
+
   gameId,
   maxAttempts,
   previousGames = [],

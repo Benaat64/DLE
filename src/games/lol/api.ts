@@ -5,16 +5,6 @@ import { getCountryCode } from "../../utils/countriesUtil";
 // Liste des ligues majeures à inclure
 const MAJOR_LEAGUES = ["LEC", "LCK", "LCS", "LPL", "LTA North", "LTA South"];
 
-interface CargoResponse {
-  cargoquery: Array<{
-    title: {
-      Player: string;
-      Country: string;
-      Birthdate: string;
-    };
-  }>;
-}
-
 interface EsportsResponse {
   data: {
     teams: Array<{
@@ -93,7 +83,10 @@ export const fetchPlayerDetailsFromCargo = async (
     if (data.countryCode) {
       result.countryCode = data.countryCode;
     } else if (data.country && data.country !== "N/A") {
-      result.countryCode = getCountryCode(data.country);
+      const countryCode = getCountryCode(data.country);
+      if (countryCode) {
+        result.countryCode = countryCode;
+      }
     }
 
     // Ajouter l'image si disponible
@@ -136,29 +129,6 @@ export const fetchPlayerDetailsFromCargo = async (
       age: "N/A",
     };
   }
-};
-
-// Fonction pour calculer l'âge à partir de la date de naissance
-const calculateAge = (birthdate: string): string => {
-  const birthDate = new Date(birthdate);
-
-  // Vérifiez si la date est valide
-  if (isNaN(birthDate.getTime())) {
-    return "N/A";
-  }
-
-  const today = new Date();
-  let age = today.getFullYear() - birthDate.getFullYear();
-  const monthDifference = today.getMonth() - birthDate.getMonth();
-
-  if (
-    monthDifference < 0 ||
-    (monthDifference === 0 && today.getDate() < birthDate.getDate())
-  ) {
-    age--;
-  }
-
-  return age.toString();
 };
 
 // Classe d'adaptateur pour l'API LoL
@@ -205,7 +175,10 @@ export class LolApiAdapter implements DataAdapter<LolPlayerData> {
 
       data.data.teams.forEach((team) => {
         // Utiliser le filtre de ligue ici
-        if (this.leagueFilter.includes(team.homeLeague?.name)) {
+        if (
+          team.homeLeague?.name &&
+          this.leagueFilter.includes(team.homeLeague.name)
+        ) {
           team.players.forEach((player) => {
             if (!uniquePlayers.has(player.summonerName)) {
               uniquePlayers.add(player.summonerName);
@@ -239,5 +212,71 @@ export class LolApiAdapter implements DataAdapter<LolPlayerData> {
       console.error("Erreur lors de la récupération des joueurs:", error);
       return [];
     }
+  }
+
+  // Implémenter la méthode getTestPlayers requise par l'interface DataAdapter
+  async getTestPlayers(): Promise<LolPlayerData[]> {
+    return [
+      {
+        id: "Faker",
+        name: "Faker",
+        team: "T1",
+        league: "LCK",
+        role: "MID",
+        image: "",
+        country: "South Korea",
+        countryCode: "kr",
+        age: "27",
+        socialMedia: {
+          twitter: undefined,
+          facebook: undefined,
+          instagram: undefined,
+          twitch: undefined,
+          tiktok: undefined,
+          discord: undefined,
+        },
+        signatureChampions: ["Leblanc", "Zed", "Syndra"],
+      },
+      {
+        id: "Caps",
+        name: "Caps",
+        team: "G2 Esports",
+        league: "LEC",
+        role: "MID",
+        image: "",
+        country: "Denmark",
+        countryCode: "dk",
+        age: "24",
+        socialMedia: {
+          twitter: undefined,
+          facebook: undefined,
+          instagram: undefined,
+          twitch: undefined,
+          tiktok: undefined,
+          discord: undefined,
+        },
+        signatureChampions: ["Leblanc", "Sylas", "Akali"],
+      },
+      {
+        id: "Rekkles",
+        name: "Rekkles",
+        team: "Fnatic",
+        league: "LEC",
+        role: "BOT",
+        image: "",
+        country: "Sweden",
+        countryCode: "se",
+        age: "27",
+        socialMedia: {
+          twitter: undefined,
+          facebook: undefined,
+          instagram: undefined,
+          twitch: undefined,
+          tiktok: undefined,
+          discord: undefined,
+        },
+        signatureChampions: ["Jhin", "Sivir", "Tristana"],
+      },
+    ];
   }
 }

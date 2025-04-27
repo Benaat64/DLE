@@ -17,7 +17,6 @@ function TableRow({
   onClick,
 }: TableRowProps) {
   // Log pour vérifier la structure des données
-  console.log("TableRow - Row data:", row);
 
   return (
     <div

@@ -42,7 +42,7 @@ const cache: Record<string, CacheItem<any>> = {};
 /**
  * Fonction utilitaire pour vérifier si une entrée du cache est valide
  */
-const isCacheValid = <T>(cacheKey: string): boolean => {
+const isCacheValid = (cacheKey: string): boolean => {
   if (!cache[cacheKey]) return false;
 
   const now = Date.now();
@@ -57,7 +57,7 @@ export const fetchFromLeaguepedia = async <T>(
   cacheKey?: string
 ): Promise<T> => {
   // Si une clé de cache est fournie et que le cache est valide, retourner les données du cache
-  if (cacheKey && isCacheValid<T>(cacheKey)) {
+  if (cacheKey && isCacheValid(cacheKey)) {
     console.log(`Utilisation du cache pour ${cacheKey}`);
     return cache[cacheKey].data;
   }
@@ -141,6 +141,7 @@ export const convertToGameData = (
   players: LeaguepediaPlayer[],
   stats: LeaguepediaPlayerStats[]
 ): GameData[] => {
+  // Utilisation de 'as GameData[]' pour éviter l'erreur de type sans changer la structure de données existante
   return players.map((player) => {
     // Trouver les statistiques correspondantes
     const playerStats = stats.find((s) => s.ID === player.ID) || {
@@ -167,7 +168,13 @@ export const convertToGameData = (
       nationality: player.Residency || player.Country || "N/A",
       kda: playerStats.KDA.toFixed(1),
       winRate: `${winRate}% ${winRate > 50 ? "↑" : "↓"}`,
-    };
+      // Ajoutons les propriétés manquantes pour satisfaire le type GameData
+      league: "", // Champ obligatoire
+      role: player.Role, // Utilisons le rôle comme dans LeaguepediaPlayer
+      image: player.Image || "", // Utilisons l'image si disponible
+      country: player.Country || "", // Pays du joueur
+      age: "N/A", // Information non disponible dans l'API, mettons une valeur par défaut
+    } as GameData;
   });
 };
 

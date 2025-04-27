@@ -21,7 +21,7 @@ const GameTable = ({
   data,
   correctData,
   colorMapping,
-  allPlayers,
+
   onRowClick,
 }: GameTableProps) => {
   return (

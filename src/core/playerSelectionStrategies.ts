@@ -1,18 +1,14 @@
 import { GameData, PlayerSelectionStrategy } from "./types";
 
-// Liste des ligues majeures autorisées
-const MAJOR_LEAGUES = ["LEC", "LCK", "LPL", "LCS", "LTA North", "LTA South"];
-
 // Stratégie de sélection aléatoire (mode développement)
 export class RandomPlayerStrategy<T extends GameData>
   implements PlayerSelectionStrategy<T>
 {
   private leagues?: string[];
-  private leagueId: string;
 
-  constructor(leagues?: string[], leagueId: string = "all") {
+  constructor(leagues?: string[], _leagueId: string = "all") {
     this.leagues = leagues;
-    this.leagueId = leagueId;
+    // _leagueId est accepté pour compatibilité mais n'est pas utilisé
   }
 
   selectPlayer(players: T[]): T | null {

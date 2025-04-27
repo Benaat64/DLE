@@ -1,3 +1,4 @@
+// src/pages/lol/LOLGame.tsx
 import { useParams, useNavigate } from "react-router-dom";
 import { useGameEngine } from "../../core/GameEngine";
 import GameTable from "../../components/GameTable";
@@ -5,14 +6,20 @@ import { LolApiAdapter } from "./api";
 import { lolThemeConfig } from "./config";
 import { createPlayerSelectionStrategy } from "../../core/playerSelectionStrategies";
 import PlayerDetails from "./PlayerDetails";
+import VictoryConfetti from "../../components/VictoryFireworks";
 import { LolPlayerData } from "./types";
 import { useMemo, useState, useEffect } from "react";
 import HistoryStatsModal from "../../components/HistoryStatsModal";
 import { useEnhancedStats } from "../../core/useEnhancedGameStats";
 import { GuessResult } from "../../core/EnhancedStatsTypes";
 
+// Définition du type pour getTimeUntilNextGame
+interface CountdownTimerProps {
+  getTimeUntilNextGame: () => number;
+}
+
 // Composant de timer pour afficher le temps restant jusqu'à la prochaine partie
-const CountdownTimer = ({ getTimeUntilNextGame }) => {
+const CountdownTimer = ({ getTimeUntilNextGame }: CountdownTimerProps) => {
   const [remainingTime, setRemainingTime] = useState<{
     hours: number;
     minutes: number;
@@ -78,10 +85,8 @@ const CountdownTimer = ({ getTimeUntilNextGame }) => {
 };
 
 const LOLGame = () => {
-  // État pour le timer jusqu'à la prochaine partie
-  const [timeUntilNextGame, setTimeUntilNextGame] = useState<number | null>(
-    null
-  );
+  // État pour afficher l'animation de victoire
+  const [showVictoryAnimation, setShowVictoryAnimation] = useState(false);
 
   // Récupérer le paramètre de ligue de l'URL
   const { leagueId } = useParams<{ leagueId: string }>();
@@ -148,7 +153,6 @@ const LOLGame = () => {
     attempts,
     maxAttempts,
     loading,
-    suggestions,
     showSuggestions,
     error,
     selectedPlayer,
@@ -156,7 +160,6 @@ const LOLGame = () => {
     handleGuess,
     selectSuggestion,
     setSelectedPlayer,
-    resetGame,
     setShowSuggestions,
     getTimeUntilNextGame,
   } = useGameEngine<LolPlayerData>(
@@ -182,10 +185,10 @@ const LOLGame = () => {
         // Personnalisez cette logique selon vos règles de jeu
         const sameTeam = guess.team === targetPlayer.team;
         const sameRole = guess.role === targetPlayer.role;
-        const sameNationality = guess.nationality === targetPlayer.nationality;
+        const sameCountry = guess.country === targetPlayer.country; // Utiliser country au lieu de nationality
         const sameLeague = guess.league === targetPlayer.league;
 
-        if (sameTeam || sameRole || sameNationality || sameLeague) {
+        if (sameTeam || sameRole || sameCountry || sameLeague) {
           return "close";
         }
 
@@ -200,6 +203,12 @@ const LOLGame = () => {
       const won = guesses.some((g) => g.id === targetPlayer.id);
       const guessResults = generateGuessResults();
 
+      // Afficher l'animation de victoire si le joueur a gagné
+      if (won) {
+        // Afficher les feux d'artifice immédiatement
+        setShowVictoryAnimation(true);
+      }
+
       // Un petit délai pour permettre au joueur de voir le résultat
       const timer = setTimeout(() => {
         recordGameEnd(won, attempts, guessResults, targetPlayer.name);
@@ -208,9 +217,6 @@ const LOLGame = () => {
       return () => clearTimeout(timer);
     }
   }, [gameOver, targetPlayer, guesses, attempts, recordGameEnd]);
-
-  // Afficher un message d'information sur les tentatives sauvegardées
-  const hasSavedGuesses = !loading && guesses.length > 0;
 
   // Titre ajusté en fonction de la ligue sélectionnée
   const gameTitle =
@@ -259,6 +265,11 @@ const LOLGame = () => {
     handleGuess();
   };
 
+  // Fermer l'animation de victoire
+  const handleCloseVictory = () => {
+    setShowVictoryAnimation(false);
+  };
+
   return (
     <div className="px-4 py-8 max-w-4xl mx-auto">
       <div className="mb-6 flex justify-between items-center">
@@ -297,16 +308,6 @@ const LOLGame = () => {
         </div>
       ) : (
         <>
-          {/* Message pour informer que les tentatives ont été restaurées */}
-          {hasSavedGuesses && !gameOver && (
-            <div className="text-blue-400 text-center mb-4 p-3 bg-gray-800 rounded-lg">
-              Vos {attempts} tentative{attempts > 1 ? "s" : ""} précédente
-              {attempts > 1 ? "s" : ""} d'aujourd'hui{" "}
-              {attempts > 1 ? "ont été" : "a été"} restaurée
-              {attempts > 1 ? "s" : ""}.
-            </div>
-          )}
-
           <div className="relative flex items-center mb-8 gap-3">
             <input
               type="text"
@@ -412,12 +413,12 @@ const LOLGame = () => {
           </div>
 
           <GameTable
-            columns={lolThemeConfig.columns}
-            data={guesses}
-            correctData={targetPlayer}
+            columns={lolThemeConfig.columns as any}
+            data={guesses as any}
+            correctData={targetPlayer as any}
             colorMapping={lolThemeConfig.colorMapping}
             className="mb-8"
-            allPlayers={players}
+            // Suppression de la propriété allPlayers qui n'existe pas dans GameTableProps
             onRowClick={(player) => setSelectedPlayer(player as LolPlayerData)}
           />
 
@@ -456,6 +457,15 @@ const LOLGame = () => {
         leagueId={league}
         isGlobalStats={false}
       />
+
+      {/* Animation de victoire avec feux d'artifice */}
+      {targetPlayer && (
+        <VictoryConfetti
+          show={showVictoryAnimation}
+          player={targetPlayer}
+          onClose={handleCloseVictory}
+        />
+      )}
     </div>
   );
 };

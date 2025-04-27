@@ -8,7 +8,7 @@ interface GameTableProps {
   correctData?: GameData;
   colorMapping?: ColorMapping;
   className?: string;
-  allPlayers?: GameData[]; // Ajouter cette prop
+
   onRowClick?: (player: GameData) => void; // Ajouter cette prop
 }
 
@@ -18,7 +18,7 @@ function GameTable({
   correctData,
   colorMapping,
   className = "",
-  allPlayers,
+
   onRowClick,
 }: GameTableProps) {
   return (

@@ -46,9 +46,12 @@ const PlayerDetails = ({ player, onClose }: PlayerDetailsProps) => {
     const code = player.countryCode || getCountryCode(player.country);
 
     if (code) {
+      // Convertir null en undefined pour être compatible avec l'attribut src
+      const flagUrl = getFlagImageUrl(code) || undefined;
+
       return (
         <img
-          src={getFlagImageUrl(code)}
+          src={flagUrl}
           alt={player.nationalityPrimary || player.country}
           className="h-5 w-auto mr-2"
         />

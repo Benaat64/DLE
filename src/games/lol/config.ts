@@ -2,6 +2,7 @@
 import { ThemeConfig } from "../../core/types";
 import { LolPlayerData } from "./types";
 import { fetchPlayerDetailsFromCargo } from "./api";
+import { getCountryCode } from "../../utils/countriesUtil"; // Importation de la fonction depuis votre fichier utilitaire
 
 // Configuration du thème LoL
 export const lolThemeConfig: ThemeConfig<LolPlayerData> = {
@@ -129,7 +130,6 @@ export const lolThemeConfig: ThemeConfig<LolPlayerData> = {
   },
 
   // Fonction pour enrichir les détails d'un joueur avec des données supplémentaires
-  // Dans lolThemeConfig, la fonction enrichPlayerDetails
   enrichPlayerDetails: async (
     player: LolPlayerData
   ): Promise<LolPlayerData> => {
@@ -160,10 +160,15 @@ export const lolThemeConfig: ThemeConfig<LolPlayerData> = {
       // Déterminer le code du pays
       let countryCode = result.countryCode;
       if (!countryCode && result.country && result.country !== "N/A") {
-        countryCode = getCountryCode(result.country);
-        console.log(
-          `enrichPlayerDetails - Code pays dérivé pour ${player.name}: ${countryCode}`
-        );
+        // Convertir null en undefined pour être compatible avec le type attendu
+        const derivedCountryCode = getCountryCode(result.country);
+        countryCode = derivedCountryCode || undefined;
+
+        if (derivedCountryCode) {
+          console.log(
+            `enrichPlayerDetails - Code pays dérivé pour ${player.name}: ${derivedCountryCode}`
+          );
+        }
       }
 
       // Construire l'objet joueur enrichi

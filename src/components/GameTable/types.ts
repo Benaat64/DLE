@@ -7,15 +7,16 @@ export type RendererType =
   | "indicator"
   | "image";
 
+export type ColumnId = keyof GameData;
+
 export interface Column {
-  id: string;
+  id: ColumnId;
   title: string;
   renderer: RendererType;
   sortable?: boolean;
   width?: string;
   align?: "left" | "center" | "right";
 }
-
 export interface GameData {
   id: string;
   name: string;
@@ -48,6 +49,6 @@ export interface GameData {
   role: string;
   image: string;
   country: string;
-  countryCode?: string; // Assurez-vous que cette propriété existe
+  countryCode?: string;
   age: string;
 }
