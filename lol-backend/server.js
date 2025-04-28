@@ -14,14 +14,12 @@ app.use(bodyParser.json());
 // Routes API
 app.use("/api", lolRoutes);
 
-// Servir les fichiers statiques du dossier build
-// Supposons que votre build React se trouve dans un dossier 'build' ou 'client/build'
-// Ajustez le chemin selon votre structure de projet
-app.use(express.static(path.join(__dirname, "client/build")));
+// Servir les fichiers statiques du dossier dist (généré par Vite)
+app.use(express.static(path.join(__dirname, "dist")));
 
 // Toutes les requêtes non API sont dirigées vers index.html
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "client/build", "index.html"));
+  res.sendFile(path.join(__dirname, "dist", "index.html"));
 });
 
 // Middleware pour gérer les erreurs
