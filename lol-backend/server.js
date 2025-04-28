@@ -14,21 +14,19 @@ app.use(bodyParser.json());
 // Routes API
 app.use("/api", lolRoutes);
 
-// Servir les fichiers statiques du dossier dist (généré par Vite)
-app.use(express.static(path.join(__dirname, "dist")));
+// Important: où se trouve le dossier de build de votre frontend par rapport à server.js?
+// Si votre frontend est construit dans un dossier 'dist' ou 'build' à la racine du projet:
+const distPath = path.join(__dirname, "../dist"); // Ajustez ce chemin selon votre structure
 
-// Toutes les requêtes non API sont dirigées vers index.html
+// Servir les fichiers statiques
+app.use(express.static(distPath));
+
+// TRÈS IMPORTANT: toutes les requêtes qui ne correspondent pas à une API ou un fichier statique
+// doivent être redirigées vers index.html pour que React Router prenne le relais
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "dist", "index.html"));
+  res.sendFile(path.join(distPath, "index.html"));
 });
 
-// Middleware pour gérer les erreurs
-app.use((err, req, res, next) => {
-  console.error("Server error:", err.stack);
-  res.status(500).json({ error: "An error occurred on the server" });
-});
-
-// Démarrer le serveur
 app.listen(PORT, () => {
   console.log(`Server started on http://localhost:${PORT}`);
 });
