@@ -7,25 +7,23 @@ const lolRoutes = require("./routes/lolRoutes");
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
+// Middleware essentiels
 app.use(cors());
 app.use(bodyParser.json());
 
 // Routes API
 app.use("/api", lolRoutes);
 
-// Le chemin vers le dossier dist à la RACINE du projet (pas dans lol-backend)
-const distPath = path.join(__dirname, "../dist");
-console.log(`Chemin vers le dossier dist: ${distPath}`);
-
 // Servir les fichiers statiques depuis le dossier dist
+const distPath = path.join(__dirname, "../dist");
 app.use(express.static(distPath));
 
-// Cette ligne est CRUCIALE : rediriger toutes les autres requêtes vers index.html
+// Toutes les requêtes non API sont dirigées vers index.html
 app.get("*", (req, res) => {
   res.sendFile(path.join(distPath, "index.html"));
 });
 
+// Démarrer le serveur
 app.listen(PORT, () => {
-  console.log(`Serveur démarré sur le port ${PORT}`);
+  console.log(`Serveur démarré sur http://localhost:${PORT}`);
 });
