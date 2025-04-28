@@ -14,19 +14,18 @@ app.use(bodyParser.json());
 // Routes API
 app.use("/api", lolRoutes);
 
-// Important: où se trouve le dossier de build de votre frontend par rapport à server.js?
-// Si votre frontend est construit dans un dossier 'dist' ou 'build' à la racine du projet:
-const distPath = path.join(__dirname, "../dist"); // Ajustez ce chemin selon votre structure
+// Le chemin vers le dossier dist à la RACINE du projet (pas dans lol-backend)
+const distPath = path.join(__dirname, "../dist");
+console.log(`Chemin vers le dossier dist: ${distPath}`);
 
-// Servir les fichiers statiques
+// Servir les fichiers statiques depuis le dossier dist
 app.use(express.static(distPath));
 
-// TRÈS IMPORTANT: toutes les requêtes qui ne correspondent pas à une API ou un fichier statique
-// doivent être redirigées vers index.html pour que React Router prenne le relais
+// Cette ligne est CRUCIALE : rediriger toutes les autres requêtes vers index.html
 app.get("*", (req, res) => {
   res.sendFile(path.join(distPath, "index.html"));
 });
 
 app.listen(PORT, () => {
-  console.log(`Server started on http://localhost:${PORT}`);
+  console.log(`Serveur démarré sur le port ${PORT}`);
 });
