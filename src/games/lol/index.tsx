@@ -67,7 +67,7 @@ const CountdownTimer = ({ getTimeUntilNextGame }: CountdownTimerProps) => {
       <div className="flex items-center">
         <div className="flex flex-col items-center mx-2">
           <span className="text-white">{format(remainingTime.hours)}</span>
-          <span className="text-xs text-gray-400">heures</span>
+          <span className="text-xs text-gray-400">hours</span>
         </div>
         <span className="text-white">:</span>
         <div className="flex flex-col items-center mx-2">
@@ -122,8 +122,10 @@ const LOLGame = () => {
   const leagueFilter = useMemo(() => {
     if (league === "all") {
       return ["LEC", "LCK", "LPL", "LCS", "LTA North", "LTA South"]; // Toutes les ligues
-    } else if (league === "lta") {
-      return ["LTA North", "LTA South"]; // Les deux régions LTA combinées
+    } else if (league === "lta-north") {
+      return ["LTA North"]; // Seulement LTA Nord
+    } else if (league === "lta-south") {
+      return ["LTA South"]; // Seulement LTA Sud
     }
     // Sinon, seulement la ligue spécifiée
     return [league.toUpperCase()];
@@ -220,7 +222,15 @@ const LOLGame = () => {
 
   // Titre ajusté en fonction de la ligue sélectionnée
   const gameTitle =
-    league !== "all" ? `LEAGUE-LE - ${league.toUpperCase()}` : "LEAGUE-LE";
+    league !== "all"
+      ? `LEAGUE-LE - ${
+          league === "lta-north"
+            ? "LTA NORTH"
+            : league === "lta-south"
+            ? "LTA SOUTH"
+            : league.toUpperCase()
+        }`
+      : "LEAGUE-LE";
 
   // Filtrer les suggestions pour n'afficher que les joueurs de la ligue sélectionnée
   const filteredSuggestions = useMemo(() => {
@@ -253,10 +263,15 @@ const LOLGame = () => {
 
     if (league !== "all" && !leagueFilter.includes(playerToGuess.league)) {
       // Joueur d'une autre ligue
+      const leagueName =
+        league === "lta-north"
+          ? "LTA North"
+          : league === "lta-south"
+          ? "LTA South"
+          : league.toUpperCase();
+
       setErrorMessage(
-        `You can only guess players from ${
-          league === "lta" ? "LTA" : league.toUpperCase()
-        } in this mode.`
+        `You can only guess players from ${leagueName} in this mode.`
       );
       return;
     }
@@ -285,7 +300,15 @@ const LOLGame = () => {
           onClick={showStats}
           className="text-blue-400 hover:text-blue-300 transition-colors flex items-center"
         >
-          <span className="mr-2">📊</span> {league.toUpperCase()} Stats
+          <span className="mr-2">📊</span>{" "}
+          {league === "all"
+            ? "All"
+            : league === "lta-north"
+            ? "LTA North"
+            : league === "lta-south"
+            ? "LTA South"
+            : league.toUpperCase()}{" "}
+          Stats
         </button>
       </div>
 
@@ -295,7 +318,13 @@ const LOLGame = () => {
       <p className="text-xl text-gray-300 text-center mb-10">
         Guess the mystery LoL player{" "}
         {league !== "all" &&
-          `from ${league === "lta" ? "LTA" : league.toUpperCase()}`}
+          `from ${
+            league === "lta-north"
+              ? "LTA North"
+              : league === "lta-south"
+              ? "LTA South"
+              : league.toUpperCase()
+          }`}
       </p>
 
       {loading ? (
@@ -338,7 +367,13 @@ const LOLGame = () => {
               onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
               placeholder={`Enter a player name${
                 league !== "all"
-                  ? ` from ${league === "lta" ? "LTA" : league.toUpperCase()}`
+                  ? ` from ${
+                      league === "lta-north"
+                        ? "LTA North"
+                        : league === "lta-south"
+                        ? "LTA South"
+                        : league.toUpperCase()
+                    }`
                   : ""
               }...`}
               className="flex-1 p-4 bg-gray-800 text-white rounded-lg border border-gray-700 z-10 guess-input"
@@ -398,6 +433,42 @@ const LOLGame = () => {
               {errorMessage}
             </div>
           )}
+          {/* Lien vers Liquipedia avec l'ancre #Participating_Teams */}
+          <a
+            href={`${
+              league === "all"
+                ? "https://liquipedia.net/leagueoflegends/Portal:Players"
+                : `https://liquipedia.net/leagueoflegends/${
+                    league === "lta-north"
+                      ? "LTA/2025/Split_3/North"
+                      : league === "lta-south"
+                      ? "LTA/2025/Split_3/South"
+                      : league === "lec"
+                      ? "LEC/2025/Spring"
+                      : league === "lck"
+                      ? "LCK/2025"
+                      : league === "lpl"
+                      ? "LPL/2025/Split_3"
+                      : league === "lcs"
+                      ? "LCS/2025/Spring"
+                      : "League_of_Legends_Esports"
+                  }#Participating_Teams`
+            }`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-400 hover:text-blue-300 transition-colors"
+            title="You may need to click on Show Players"
+          >
+            <span className="mr-2">📚</span>{" "}
+            {league === "all"
+              ? "LoL Players Portal"
+              : league === "lta-north"
+              ? "LTA North"
+              : league === "lta-south"
+              ? "LTA South"
+              : league.toUpperCase()}{" "}
+            {league === "all" ? "" : "Players list on Liquipedia"}
+          </a>
 
           <div className="text-white mb-6 flex justify-between items-center">
             <span className="text-lg font-semibold">
@@ -435,13 +506,13 @@ const LOLGame = () => {
           {gameOver && (
             <div className="flex flex-col items-center mt-8">
               <div className="text-xl font-semibold text-white mb-2">
-                Nouvelle partie disponible dans
+                New game available in
               </div>
 
               <CountdownTimer getTimeUntilNextGame={getTimeUntilNextGame} />
 
               <p className="text-gray-400 mt-4 text-center">
-                Une nouvelle partie sera disponible à minuit (heure locale)
+                A new game will be available at midnight (local time)
               </p>
             </div>
           )}

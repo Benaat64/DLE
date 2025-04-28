@@ -120,7 +120,7 @@ const VictoryConfetti = ({ show, player, onClose }: VictoryConfettiProps) => {
         animate={{ y: 0 }}
         transition={{ type: "spring", stiffness: 100 }}
       >
-        Victoire !
+        Victory!
         <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-2xl">
           🏆
         </span>
@@ -148,7 +148,7 @@ const VictoryConfetti = ({ show, player, onClose }: VictoryConfettiProps) => {
             >
               <div className="bg-green-700 py-3 px-4 text-center">
                 <h2 className="text-2xl font-bold text-white">
-                  Le joueur était
+                  The player was
                 </h2>
               </div>
 
@@ -175,28 +175,28 @@ const VictoryConfetti = ({ show, player, onClose }: VictoryConfettiProps) => {
 
                   <div className="grid grid-cols-2 gap-2 text-sm mb-3">
                     <div className="bg-gray-700 p-2 rounded">
-                      <span className="text-gray-400">Équipe:</span>
+                      <span className="text-gray-400">Team:</span>
                       <div className="text-white font-medium">
                         {player.team}
                       </div>
                     </div>
 
                     <div className="bg-gray-700 p-2 rounded">
-                      <span className="text-gray-400">Rôle:</span>
+                      <span className="text-gray-400">Role:</span>
                       <div className="text-white font-medium">
                         {player.role}
                       </div>
                     </div>
 
                     <div className="bg-gray-700 p-2 rounded">
-                      <span className="text-gray-400">Ligue:</span>
+                      <span className="text-gray-400">League:</span>
                       <div className="text-white font-medium">
                         {player.league}
                       </div>
                     </div>
 
                     <div className="bg-gray-700 p-2 rounded">
-                      <span className="text-gray-400">Nationalité:</span>
+                      <span className="text-gray-400">Nationality:</span>
                       <div className="text-white font-medium flex items-center">
                         {renderFlag()}
                       </div>
@@ -207,7 +207,7 @@ const VictoryConfetti = ({ show, player, onClose }: VictoryConfettiProps) => {
                     player.signatureChampions.length > 0 && (
                       <div>
                         <span className="text-gray-400 text-sm">
-                          Champions favoris:
+                          Signature Champions:
                         </span>
                         <div className="flex flex-wrap gap-1 mt-1">
                           {player.signatureChampions.map((champion, index) => (
@@ -231,14 +231,14 @@ const VictoryConfetti = ({ show, player, onClose }: VictoryConfettiProps) => {
                   rel="noopener noreferrer"
                   className="text-blue-400 hover:text-blue-300 underline"
                 >
-                  Voir sur Leaguepedia
+                  View on Leaguepedia
                 </a>
 
                 <button
                   onClick={onClose}
                   className="px-6 py-2 bg-green-600 text-white font-bold rounded-lg hover:bg-green-500 transition-colors"
                 >
-                  Continuer
+                  Continue
                 </button>
               </div>
             </motion.div>

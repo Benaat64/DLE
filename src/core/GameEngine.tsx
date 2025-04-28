@@ -89,8 +89,6 @@ export const useGameEngine = <T extends GameData>(
         // Récupérer les joueurs depuis l'adaptateur
         const fetchedPlayers = await adapter.fetchPlayers();
 
-        console.log("Liste complète des joueurs:", fetchedPlayers.length);
-
         if (fetchedPlayers.length === 0) {
           throw new Error("Aucun joueur récupéré de l'API");
         }
@@ -110,7 +108,6 @@ export const useGameEngine = <T extends GameData>(
           let enrichedPlayer = selectedPlayer;
           if (enrichPlayerDetails) {
             enrichedPlayer = await enrichPlayerDetails(selectedPlayer);
-            console.log("Joueur avec détails:", enrichedPlayer.name);
           }
           setTargetPlayer(enrichedPlayer);
 

@@ -1,6 +1,5 @@
 // src/pages/LeagueSelection.tsx
 import { useNavigate } from "react-router-dom";
-// Suppression de l'import de useState qui n'est pas utilisé
 import { useEnhancedStats } from "../../core/useEnhancedGameStats";
 import HistoryStatsModal from "../../components/HistoryStatsModal";
 
@@ -15,13 +14,8 @@ const LeagueSelection = () => {
   };
 
   // Utiliser notre hook de statistiques avec l'option isGlobalStats à true
-  const {
-    isStatsModalOpen,
-    setStatsModalOpen,
-    statsService,
-    showStats,
-    // Suppression de isGlobalStats qui n'est pas utilisé
-  } = useEnhancedStats(statsConfig, { isGlobalStats: true });
+  const { isStatsModalOpen, setStatsModalOpen, statsService, showStats } =
+    useEnhancedStats(statsConfig, { isGlobalStats: true });
 
   const availableLeagues = [
     {
@@ -47,10 +41,16 @@ const LeagueSelection = () => {
       image: "https://upload.wikimedia.org/wikipedia/fr/4/4a/LPL_LoL_Logo.png",
     },
     {
-      id: "lta",
-      name: "LTA",
+      id: "lta-north",
+      name: "LTA North",
       image:
-        "https://upload.wikimedia.org/wikipedia/en/thumb/8/87/League_of_Legends_Championship_of_The_Americas_logo.svg/640px-League_of_Legends_Championship_of_The_Americas_logo.svg.png",
+        "https://static.wikia.nocookie.net/lolesports_gamepedia_en/images/2/2d/LTA_North_logo.png",
+    },
+    {
+      id: "lta-south",
+      name: "LTA South",
+      image:
+        "https://static.wikia.nocookie.net/lolesports_gamepedia_en/images/c/c1/LTA_South_logo.png",
     },
   ];
 
@@ -107,7 +107,8 @@ const LeagueSelection = () => {
                     lec: "🇪🇺",
                     lck: "🇰🇷",
                     lpl: "🇨🇳",
-                    lta: "🇺🇸",
+                    "lta-north": "🇺🇸",
+                    "lta-south": "🇧🇷",
                   };
 
                   // Créer un div avec l'emoji

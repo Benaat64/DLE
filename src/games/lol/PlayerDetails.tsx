@@ -31,13 +31,13 @@ const PlayerDetails = ({ player, onClose }: PlayerDetailsProps) => {
     player.socialMedia &&
     Object.values(player.socialMedia).some((value) => !!value);
 
-  console.log("Affichage des détails du joueur:", player.name);
-  console.log("Pays:", player.country);
+  console.log("Displaying player details:", player.name);
+  console.log("Country:", player.country);
   console.log(
-    "Code pays:",
+    "Country code:",
     player.countryCode || getCountryCode(player.country)
   );
-  console.log("Réseaux sociaux disponibles:", player.socialMedia);
+  console.log("Available social media:", player.socialMedia);
   console.log("hasSocialMedia:", hasSocialMedia);
 
   // Gérer l'affichage du drapeau
@@ -78,7 +78,7 @@ const PlayerDetails = ({ player, onClose }: PlayerDetailsProps) => {
             />
           ) : (
             <div className="h-48 w-40 bg-gray-800 flex items-center justify-center text-gray-400">
-              Pas d'image disponible
+              No image available
             </div>
           )}
         </div>
@@ -86,17 +86,17 @@ const PlayerDetails = ({ player, onClose }: PlayerDetailsProps) => {
         {/* Information de base */}
         <div className="border-t border-gray-600">
           <div className="bg-blue-900 py-2 px-4">
-            <h3 className="text-white font-bold">Informations personnelles</h3>
+            <h3 className="text-white font-bold">Personal Information</h3>
           </div>
 
           <div className="text-white">
             <div className="grid grid-cols-2 border-b border-gray-600">
-              <div className="p-2 bg-gray-800 font-medium">Nom</div>
+              <div className="p-2 bg-gray-800 font-medium">Name</div>
               <div className="p-2 bg-gray-700">{player.name}</div>
             </div>
 
             <div className="grid grid-cols-2 border-b border-gray-600">
-              <div className="p-2 bg-gray-800 font-medium">Nationalité</div>
+              <div className="p-2 bg-gray-800 font-medium">Nationality</div>
               <div className="p-2 bg-gray-700 flex items-center">
                 {renderFlag()}
                 {player.nationalityPrimary || player.country || "N/A"}
@@ -104,7 +104,7 @@ const PlayerDetails = ({ player, onClose }: PlayerDetailsProps) => {
             </div>
 
             <div className="grid grid-cols-2 border-b border-gray-600">
-              <div className="p-2 bg-gray-800 font-medium">Âge</div>
+              <div className="p-2 bg-gray-800 font-medium">Age</div>
               <div className="p-2 bg-gray-700">{player.age || "N/A"}</div>
             </div>
           </div>
@@ -113,22 +113,22 @@ const PlayerDetails = ({ player, onClose }: PlayerDetailsProps) => {
         {/* Informations compétitives */}
         <div className="border-t border-gray-600">
           <div className="bg-blue-900 py-2 px-4">
-            <h3 className="text-white font-bold">Compétitif</h3>
+            <h3 className="text-white font-bold">Competitive</h3>
           </div>
 
           <div className="text-white">
             <div className="grid grid-cols-2 border-b border-gray-600">
-              <div className="p-2 bg-gray-800 font-medium">Équipe</div>
+              <div className="p-2 bg-gray-800 font-medium">Team</div>
               <div className="p-2 bg-gray-700">{player.team}</div>
             </div>
 
             <div className="grid grid-cols-2 border-b border-gray-600">
-              <div className="p-2 bg-gray-800 font-medium">Ligue</div>
+              <div className="p-2 bg-gray-800 font-medium">League</div>
               <div className="p-2 bg-gray-700">{player.league}</div>
             </div>
 
             <div className="grid grid-cols-2 border-b border-gray-600">
-              <div className="p-2 bg-gray-800 font-medium">Rôle</div>
+              <div className="p-2 bg-gray-800 font-medium">Role</div>
               <div className="p-2 bg-gray-700">{player.role}</div>
             </div>
 
@@ -136,7 +136,7 @@ const PlayerDetails = ({ player, onClose }: PlayerDetailsProps) => {
               player.signatureChampions.length > 0 && (
                 <div className="grid grid-cols-2 border-b border-gray-600">
                   <div className="p-2 bg-gray-800 font-medium">
-                    Champions favoris
+                    Signature Champions
                   </div>
                   <div className="p-2 bg-gray-700 flex flex-wrap gap-1">
                     {player.signatureChampions.map((champion, index) => (
@@ -157,7 +157,7 @@ const PlayerDetails = ({ player, onClose }: PlayerDetailsProps) => {
         {hasSocialMedia && (
           <div className="border-t border-gray-600">
             <div className="bg-blue-900 py-2 px-4">
-              <h3 className="text-white font-bold">Réseaux sociaux</h3>
+              <h3 className="text-white font-bold">Social Media</h3>
             </div>
 
             <div className="p-3 bg-gray-700 flex flex-wrap gap-4 justify-center">
@@ -248,14 +248,14 @@ const PlayerDetails = ({ player, onClose }: PlayerDetailsProps) => {
             rel="noopener noreferrer"
             className="text-blue-400 hover:text-blue-300 underline"
           >
-            Voir sur Leaguepedia
+            View on Leaguepedia
           </a>
 
           <button
             onClick={onClose}
             className="px-4 py-2 bg-blue-700 text-white rounded hover:bg-blue-600"
           >
-            Fermer
+            Close
           </button>
         </div>
       </div>

@@ -46,7 +46,6 @@ export const fetchPlayerDetailsFromCargo = async (
   signatureChampions?: string[];
 }> => {
   try {
-    console.log(`Chargement du joueur: ${playerName}`);
     const url = `${API_BASE_URL}/api/cargo?playerName=${encodeURIComponent(
       playerName
     )}${team ? `&team=${encodeURIComponent(team)}` : ""}${
