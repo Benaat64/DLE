@@ -299,8 +299,11 @@ const LOLGame = () => {
       </p>
 
       {loading ? (
-        <div className="flex justify-center items-center my-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        <div className="flex flex-col justify-center items-center my-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
+          <p className="text-gray-300 text-lg">
+            Please wait, loading players data...
+          </p>
         </div>
       ) : error ? (
         <div className="text-yellow-400 text-center mb-4 p-4 bg-gray-800 rounded-lg">
