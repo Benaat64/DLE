@@ -87,6 +87,9 @@ const CountdownTimer = ({ getTimeUntilNextGame }: CountdownTimerProps) => {
 const LOLGame = () => {
   // État pour afficher l'animation de victoire
   const [showVictoryAnimation, setShowVictoryAnimation] = useState(false);
+  // État pour suivre l'index de suggestion sélectionné
+  const [selectedSuggestionIndex, setSelectedSuggestionIndex] =
+    useState<number>(-1);
 
   // Récupérer le paramètre de ligue de l'URL
   const { leagueId } = useParams<{ leagueId: string }>();
@@ -347,16 +350,63 @@ const LOLGame = () => {
               onChange={(e) => {
                 setInputValue(e.target.value);
                 setErrorMessage(null);
+                setSelectedSuggestionIndex(-1); // Réinitialiser l'index quand l'utilisateur tape
               }}
               onKeyDown={(e) => {
-                if (e.key === "Enter") {
+                if (showSuggestions && filteredSuggestions.length > 0) {
+                  switch (e.key) {
+                    case "ArrowDown":
+                      e.preventDefault(); // Empêcher le défilement de la page
+                      setSelectedSuggestionIndex((prevIndex) =>
+                        prevIndex < filteredSuggestions.length - 1
+                          ? prevIndex + 1
+                          : prevIndex
+                      );
+                      break;
+                    case "ArrowUp":
+                      e.preventDefault(); // Empêcher le défilement de la page
+                      setSelectedSuggestionIndex((prevIndex) =>
+                        prevIndex > 0 ? prevIndex - 1 : -1
+                      );
+                      break;
+                    case "Enter":
+                      if (selectedSuggestionIndex >= 0) {
+                        // Si une suggestion est sélectionnée, utilisez-la
+                        e.preventDefault();
+                        selectSuggestion(
+                          filteredSuggestions[selectedSuggestionIndex]
+                        );
+                        setSelectedSuggestionIndex(-1);
+                        setShowSuggestions(false);
+                        setErrorMessage(null);
+                      } else {
+                        // Si aucune suggestion n'est sélectionnée, faites une devinette
+                        handleGuessWithLeagueCheck();
+                      }
+                      break;
+                    case "Tab":
+                      // Auto-compléter avec la première suggestion ou la sélectionnée
+                      if (filteredSuggestions.length > 0) {
+                        e.preventDefault();
+                        const indexToUse =
+                          selectedSuggestionIndex >= 0
+                            ? selectedSuggestionIndex
+                            : 0;
+                        selectSuggestion(filteredSuggestions[indexToUse]);
+                        setSelectedSuggestionIndex(-1);
+                        setShowSuggestions(false);
+                        setErrorMessage(null);
+                      }
+                      break;
+                    case "Escape":
+                      // Fermer les suggestions
+                      setShowSuggestions(false);
+                      setSelectedSuggestionIndex(-1);
+                      break;
+                  }
+                } else if (e.key === "Enter") {
+                  // Si pas de suggestions visibles, juste faire la devinette
                   handleGuessWithLeagueCheck();
-                } else if (
-                  e.key === "ArrowDown" &&
-                  showSuggestions &&
-                  filteredSuggestions.length > 0
-                ) {
-                  document.getElementById("suggestion-0")?.focus();
                 }
               }}
               onFocus={() => {
@@ -364,7 +414,12 @@ const LOLGame = () => {
                   setShowSuggestions(true);
                 }
               }}
-              onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+              onBlur={() =>
+                setTimeout(() => {
+                  setShowSuggestions(false);
+                  setSelectedSuggestionIndex(-1);
+                }, 200)
+              }
               placeholder={`Enter a player name${
                 league !== "all"
                   ? ` from ${
@@ -393,33 +448,17 @@ const LOLGame = () => {
                   <li
                     key={index}
                     id={`suggestion-${index}`}
-                    className="p-3 hover:bg-gray-700 cursor-pointer text-white suggestion-item"
+                    className={`p-3 cursor-pointer text-white suggestion-item ${
+                      index === selectedSuggestionIndex
+                        ? "bg-blue-700"
+                        : "hover:bg-gray-700"
+                    }`}
                     onMouseDown={() => {
                       selectSuggestion(suggestion);
                       setErrorMessage(null);
                     }}
+                    onMouseEnter={() => setSelectedSuggestionIndex(index)}
                     tabIndex={0}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        selectSuggestion(suggestion);
-                        setErrorMessage(null);
-                      } else if (
-                        e.key === "ArrowDown" &&
-                        index < filteredSuggestions.length - 1
-                      ) {
-                        document
-                          .getElementById(`suggestion-${index + 1}`)
-                          ?.focus();
-                      } else if (e.key === "ArrowUp") {
-                        if (index > 0) {
-                          document
-                            .getElementById(`suggestion-${index - 1}`)
-                            ?.focus();
-                        } else {
-                          document.querySelector("input")?.focus();
-                        }
-                      }
-                    }}
                   >
                     {suggestion}
                   </li>

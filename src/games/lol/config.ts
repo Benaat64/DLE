@@ -63,18 +63,8 @@ export const lolThemeConfig: ThemeConfig<LolPlayerData> = {
       // Logiques spécifiques pour différentes colonnes
       switch (columnId) {
         case "country":
-          // Si la valeur correcte est N/A, on ne peut pas vraiment comparer
-          if (correctValue === "N/A" || correctValue === "Inconnu") {
-            return "bg-red-600 text-white";
-          }
-
-          // Normaliser et comparer
-          const countryValue = String(value).trim().toLowerCase();
-          const correctCountryValue = String(correctValue).trim().toLowerCase();
-
-          return countryValue === correctCountryValue
-            ? "bg-green-600 text-white"
-            : "bg-red-600 text-white";
+          // Retourner une classe neutre ou vide pour ne pas colorer le drapeau
+          return "";
 
         case "age":
           // Si la valeur correcte est N/A, on ne peut pas comparer les âges
