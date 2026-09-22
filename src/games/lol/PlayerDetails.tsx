@@ -1,13 +1,5 @@
 import { LolPlayerData } from "./types";
-// Import des icônes
-import {
-  FaTwitter,
-  FaTwitch,
-  FaInstagram,
-  FaFacebook,
-  FaDiscord,
-} from "react-icons/fa";
-import { PiThreadsLogoFill } from "react-icons/pi";
+import PlayerSocialLinks from "./PlayerSocialLinks";
 // Import des fonctions pour les drapeaux
 import { getFlagImageUrl, getCountryCode } from "../../utils/countriesUtil";
 
@@ -25,20 +17,6 @@ const PlayerDetails = ({ player, onClose }: PlayerDetailsProps) => {
     const formattedName = playerName.replace(/\s/g, "_");
     return `https://lol.fandom.com/wiki/${formattedName}`;
   };
-
-  // Vérifier si le joueur a des réseaux sociaux
-  const hasSocialMedia =
-    player.socialMedia &&
-    Object.values(player.socialMedia).some((value) => !!value);
-
-  console.log("Displaying player details:", player.name);
-  console.log("Country:", player.country);
-  console.log(
-    "Country code:",
-    player.countryCode || getCountryCode(player.country)
-  );
-  console.log("Available social media:", player.socialMedia);
-  console.log("hasSocialMedia:", hasSocialMedia);
 
   // Gérer l'affichage du drapeau
   const renderFlag = () => {
@@ -153,92 +131,7 @@ const PlayerDetails = ({ player, onClose }: PlayerDetailsProps) => {
           </div>
         </div>
 
-        {/* Réseaux sociaux avec icônes */}
-        {hasSocialMedia && (
-          <div className="border-t border-gray-600">
-            <div className="bg-blue-900 py-2 px-4">
-              <h3 className="text-white font-bold">Social Media</h3>
-            </div>
-
-            <div className="p-3 bg-gray-700 flex flex-wrap gap-4 justify-center">
-              {player.socialMedia?.twitter && (
-                <a
-                  href={player.socialMedia.twitter}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-3 rounded-full bg-blue-500 text-white hover:bg-blue-600 transition-colors"
-                  title="Twitter"
-                >
-                  <FaTwitter size={24} />
-                </a>
-              )}
-
-              {player.socialMedia?.twitch && (
-                <a
-                  href={player.socialMedia.twitch}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-3 rounded-full bg-purple-600 text-white hover:bg-purple-700 transition-colors"
-                  title="Twitch"
-                >
-                  <FaTwitch size={24} />
-                </a>
-              )}
-
-              {player.socialMedia?.instagram && (
-                <a
-                  href={player.socialMedia.instagram}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-3 rounded-full bg-gradient-to-br from-pink-500 via-red-500 to-yellow-500 text-white hover:opacity-90 transition-opacity"
-                  title="Instagram"
-                >
-                  <FaInstagram size={24} />
-                </a>
-              )}
-
-              {player.socialMedia?.facebook && (
-                <a
-                  href={player.socialMedia.facebook}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-3 rounded-full bg-blue-800 text-white hover:bg-blue-900 transition-colors"
-                  title="Facebook"
-                >
-                  <FaFacebook size={24} />
-                </a>
-              )}
-
-              {player.socialMedia?.discord && (
-                <a
-                  href={player.socialMedia.discord}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-3 rounded-full bg-indigo-600 text-white hover:bg-indigo-700 transition-colors"
-                  title="Discord"
-                >
-                  <FaDiscord size={24} />
-                </a>
-              )}
-
-              {player.socialMedia?.tiktok && (
-                <a
-                  href={player.socialMedia.tiktok}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-3 rounded-full bg-black text-white hover:bg-gray-900 transition-colors"
-                  title={
-                    player.socialMedia.tiktok.includes("threads.net")
-                      ? "Threads"
-                      : "TikTok"
-                  }
-                >
-                  <PiThreadsLogoFill size={24} />
-                </a>
-              )}
-            </div>
-          </div>
-        )}
+        <PlayerSocialLinks socialMedia={player.socialMedia} />
 
         {/* Liens */}
         <div className="p-4 bg-gray-700 flex justify-between items-center">

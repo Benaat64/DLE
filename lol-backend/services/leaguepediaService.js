@@ -1,4 +1,29 @@
-const getPlayerInfo = async (playerName, team, league, role) => {
+const playerCache = new Map();
+const pendingPlayers = new Map();
+const CACHE_DURATION = 24 * 60 * 60 * 1000;
+
+const queryPlayers = async (fields, where) => {
+  const url = new URL("https://lol.fandom.com/api.php");
+  url.search = new URLSearchParams({
+    action: "cargoquery",
+    tables: "Players",
+    fields,
+    where,
+    format: "json",
+  }).toString();
+
+  const response = await fetch(url, { signal: AbortSignal.timeout(10000) });
+  if (!response.ok) {
+    throw new Error(`Leaguepedia HTTP ${response.status}`);
+  }
+  const data = await response.json();
+  if (data.error) {
+    throw new Error(`Leaguepedia ${data.error.code}: ${data.error.info}`);
+  }
+  return data.cargoquery || [];
+};
+
+const getPlayerInfoUncached = async (playerName, team, league, role, cacheKey) => {
   try {
     console.log(`=== Début getPlayerInfo pour: ${playerName} ===`);
 
@@ -6,93 +31,19 @@ const getPlayerInfo = async (playerName, team, league, role) => {
     const fields =
       "Player,Country,Nationality,NationalityPrimary,Birthdate,Team,Role,IsRetired,Image,Twitter,Facebook,Instagram,Stream,Discord,Threads,FavChamps";
 
-    // Tableau des stratégies de recherche à essayer dans l'ordre
-    const searchStrategies = [
-      // 1. Nom exact
-      `Player="${encodeURIComponent(playerName)}" AND IsRetired=false`,
-      // 2. Nom avec parenthèses - pour les formats comme "Wei (Yan Yang-Wei)"
-      `Player LIKE "${encodeURIComponent(playerName)} (%" AND IsRetired=false`,
-      // 3. Nom en tant que sous-chaîne (dernier recours)
-      `Player LIKE "%${encodeURIComponent(playerName)}%" AND IsRetired=false`,
-    ];
-
-    let playerInfo = null;
-    let allResults = [];
-
-    // Essayer chaque stratégie jusqu'à trouver un résultat
-    for (const strategy of searchStrategies) {
-      const url = `https://lol.fandom.com/api.php?action=cargoquery&tables=Players&fields=${fields}&where=${strategy}&format=json`;
-      console.log(`Essai avec stratégie: ${strategy}`);
-      console.log(`URL complète: ${url}`);
-
-      const response = await fetch(url);
-      const data = await response.json();
-
-      if (data.cargoquery && data.cargoquery.length > 0) {
-        allResults = data.cargoquery;
-        console.log(`Nombre de résultats trouvés: ${allResults.length}`);
-
-        // Chercher un joueur actif avec une équipe
-        const activePlayers = allResults.filter(
-          (player) => player.title.Team && player.title.Team.trim() !== ""
-        );
-
-        if (activePlayers.length > 0) {
-          // Prendre le DERNIER joueur actif (potentiellement le plus récent)
-          playerInfo = activePlayers[activePlayers.length - 1].title;
-          console.log(`Joueur actif trouvé (dernier): ${playerInfo.Player}`);
-          break;
-        }
-
-        // Si aucun joueur actif avec équipe, prendre le DERNIER résultat
-        playerInfo = allResults[allResults.length - 1].title;
-        console.log(`Joueur trouvé (dernier résultat): ${playerInfo.Player}`);
-        break;
-      }
-    }
-
-    // Si aucun résultat n'a été trouvé avec les stratégies pour joueurs actifs, essayer sans le filtre IsRetired
-    if (!playerInfo) {
-      console.log(
-        `Aucun résultat trouvé pour ${playerName} parmi les joueurs actifs, recherche élargie...`
-      );
-      // Stratégies sans filtre de retraite (au cas où la base de données n'a pas correctement marqué le statut)
-      const fallbackStrategies = [
-        `Player="${encodeURIComponent(playerName)}"`,
-        `Player LIKE "${encodeURIComponent(playerName)} (%"`,
-        `Player LIKE "%${encodeURIComponent(playerName)}%"`,
-      ];
-
-      for (const strategy of fallbackStrategies) {
-        const url = `https://lol.fandom.com/api.php?action=cargoquery&tables=Players&fields=${fields}&where=${strategy}&format=json`;
-        console.log(`Essai avec stratégie de secours: ${strategy}`);
-
-        const response = await fetch(url);
-        const data = await response.json();
-
-        if (data.cargoquery && data.cargoquery.length > 0) {
-          allResults = data.cargoquery;
-
-          // Privilégier les joueurs non retraités
-          const nonRetiredPlayers = allResults.filter(
-            (player) => player.title.IsRetired !== true
-          );
-
-          if (nonRetiredPlayers.length > 0) {
-            playerInfo = nonRetiredPlayers[nonRetiredPlayers.length - 1].title;
-            console.log(`Joueur non retraité trouvé: ${playerInfo.Player}`);
-            break;
-          }
-
-          // En dernier recours, prendre n'importe quel joueur
-          playerInfo = allResults[allResults.length - 1].title;
-          console.log(
-            `Joueur trouvé (potentiellement retraité): ${playerInfo.Player}`
-          );
-          break;
-        }
-      }
-    }
+    const safeName = playerName.trim().replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+    const where = `Player="${safeName}" OR Player LIKE "${safeName} (%"`;
+    const results = await queryPlayers(fields, where);
+    const normalizedName = playerName.trim().toLowerCase();
+    const normalizedTeam = team?.trim().toLowerCase();
+    const normalizedRole = role?.trim().toLowerCase();
+    const matches = results.map((entry) => entry.title).filter(Boolean);
+    const score = (player) =>
+      (normalizedTeam && player.Team?.toLowerCase() === normalizedTeam ? 16 : 0) +
+      (player.Player?.toLowerCase() === normalizedName ? 8 : 0) +
+      (player.Role?.toLowerCase() === normalizedRole ? 2 : 0) +
+      (player.IsRetired === true ? 0 : 1);
+    const playerInfo = matches.sort((a, b) => score(b) - score(a))[0];
 
     // Si toujours aucun résultat
     if (!playerInfo) {
@@ -202,6 +153,8 @@ const getPlayerInfo = async (playerName, team, league, role) => {
     console.log("Objet final renvoyé:", result);
     console.log("=== Fin getPlayerInfo ===");
 
+    playerCache.set(cacheKey, { data: result, timestamp: Date.now() });
+
     return result;
   } catch (error) {
     console.error(
@@ -217,6 +170,21 @@ const getPlayerInfo = async (playerName, team, league, role) => {
       socialMedia: null,
       signatureChampions: [],
     };
+  }
+};
+
+const getPlayerInfo = async (playerName, team, league, role) => {
+  const cacheKey = `${playerName.trim().toLowerCase()}|${team?.trim().toLowerCase() || ""}`;
+  const cached = playerCache.get(cacheKey);
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) return cached.data;
+  if (pendingPlayers.has(cacheKey)) return pendingPlayers.get(cacheKey);
+
+  const pending = getPlayerInfoUncached(playerName, team, league, role, cacheKey);
+  pendingPlayers.set(cacheKey, pending);
+  try {
+    return await pending;
+  } finally {
+    pendingPlayers.delete(cacheKey);
   }
 };
 

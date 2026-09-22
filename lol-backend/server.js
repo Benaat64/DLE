@@ -5,7 +5,7 @@ const path = require("path");
 const lolRoutes = require("./routes/lolRoutes");
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 9000;
 
 // Middleware essentiels
 app.use(cors());

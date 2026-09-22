@@ -1,96 +1,21 @@
 // src/pages/lol/LOLGame.tsx
 import { useParams, useNavigate } from "react-router-dom";
 import { useGameEngine } from "../../core/GameEngine";
-import GameTable from "../../components/GameTable";
 import { LolApiAdapter } from "./api";
 import { lolThemeConfig } from "./config";
 import { createPlayerSelectionStrategy } from "../../core/playerSelectionStrategies";
-import PlayerDetails from "./PlayerDetails";
 import VictoryConfetti from "../../components/VictoryFireworks";
 import { LolPlayerData } from "./types";
 import { useMemo, useState, useEffect } from "react";
+import PlayerGuessInput from "./PlayerGuessInput";
+import GameProgress from "./GameProgress";
 import HistoryStatsModal from "../../components/HistoryStatsModal";
 import { useEnhancedStats } from "../../core/useEnhancedGameStats";
 import { GuessResult } from "../../core/EnhancedStatsTypes";
 
-// Définition du type pour getTimeUntilNextGame
-interface CountdownTimerProps {
-  getTimeUntilNextGame: () => number;
-}
-
-// Composant de timer pour afficher le temps restant jusqu'à la prochaine partie
-const CountdownTimer = ({ getTimeUntilNextGame }: CountdownTimerProps) => {
-  const [remainingTime, setRemainingTime] = useState<{
-    hours: number;
-    minutes: number;
-    seconds: number;
-  }>({
-    hours: 0,
-    minutes: 0,
-    seconds: 0,
-  });
-
-  useEffect(() => {
-    // Calculer le temps initial
-    const updateRemainingTime = () => {
-      const msRemaining = getTimeUntilNextGame();
-
-      // Convertir en heures, minutes, secondes
-      const hours = Math.floor(msRemaining / (1000 * 60 * 60));
-      const minutes = Math.floor(
-        (msRemaining % (1000 * 60 * 60)) / (1000 * 60)
-      );
-      const seconds = Math.floor((msRemaining % (1000 * 60)) / 1000);
-
-      setRemainingTime({ hours, minutes, seconds });
-
-      // Si c'est minuit, recharger la page
-      if (msRemaining <= 0) {
-        window.location.reload();
-      }
-    };
-
-    // Mettre à jour immédiatement
-    updateRemainingTime();
-
-    // Puis toutes les secondes
-    const interval = setInterval(updateRemainingTime, 1000);
-
-    return () => clearInterval(interval);
-  }, [getTimeUntilNextGame]);
-
-  // Formater pour toujours afficher 2 chiffres
-  const format = (num: number) => String(num).padStart(2, "0");
-
-  return (
-    <div className="flex items-center justify-center bg-gray-800 rounded-lg p-4 text-3xl font-mono">
-      <div className="flex items-center">
-        <div className="flex flex-col items-center mx-2">
-          <span className="text-white">{format(remainingTime.hours)}</span>
-          <span className="text-xs text-gray-400">hours</span>
-        </div>
-        <span className="text-white">:</span>
-        <div className="flex flex-col items-center mx-2">
-          <span className="text-white">{format(remainingTime.minutes)}</span>
-          <span className="text-xs text-gray-400">min</span>
-        </div>
-        <span className="text-white">:</span>
-        <div className="flex flex-col items-center mx-2">
-          <span className="text-white">{format(remainingTime.seconds)}</span>
-          <span className="text-xs text-gray-400">sec</span>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 const LOLGame = () => {
   // État pour afficher l'animation de victoire
   const [showVictoryAnimation, setShowVictoryAnimation] = useState(false);
-  // État pour suivre l'index de suggestion sélectionné
-  const [selectedSuggestionIndex, setSelectedSuggestionIndex] =
-    useState<number>(-1);
-
   // Récupérer le paramètre de ligue de l'URL
   const { leagueId } = useParams<{ leagueId: string }>();
   const league = leagueId || "all";
@@ -160,11 +85,9 @@ const LOLGame = () => {
     loading,
     showSuggestions,
     error,
-    selectedPlayer,
     setInputValue,
     handleGuess,
     selectSuggestion,
-    setSelectedPlayer,
     setShowSuggestions,
     getTimeUntilNextGame,
   } = useGameEngine<LolPlayerData>(
@@ -234,20 +157,6 @@ const LOLGame = () => {
             : league.toUpperCase()
         }`
       : "LEAGUE-LE";
-
-  // Filtrer les suggestions pour n'afficher que les joueurs de la ligue sélectionnée
-  const filteredSuggestions = useMemo(() => {
-    if (!inputValue.trim()) return [];
-
-    return players
-      .filter(
-        (player) =>
-          player.name.toLowerCase().includes(inputValue.toLowerCase()) &&
-          (league === "all" || leagueFilter.includes(player.league))
-      )
-      .map((player) => player.name)
-      .slice(0, 10); // Limiter à 10 suggestions
-  }, [inputValue, players, league, leagueFilter]);
 
   // Fonction modifiée pour vérifier si le joueur appartient à la bonne ligue
   const handleGuessWithLeagueCheck = () => {
@@ -343,129 +252,19 @@ const LOLGame = () => {
         </div>
       ) : (
         <>
-          <div className="relative flex items-center mb-8 gap-3">
-            <input
-              type="text"
-              value={inputValue}
-              onChange={(e) => {
-                setInputValue(e.target.value);
-                setErrorMessage(null);
-                setSelectedSuggestionIndex(-1); // Réinitialiser l'index quand l'utilisateur tape
-              }}
-              onKeyDown={(e) => {
-                if (showSuggestions && filteredSuggestions.length > 0) {
-                  switch (e.key) {
-                    case "ArrowDown":
-                      e.preventDefault(); // Empêcher le défilement de la page
-                      setSelectedSuggestionIndex((prevIndex) =>
-                        prevIndex < filteredSuggestions.length - 1
-                          ? prevIndex + 1
-                          : prevIndex
-                      );
-                      break;
-                    case "ArrowUp":
-                      e.preventDefault(); // Empêcher le défilement de la page
-                      setSelectedSuggestionIndex((prevIndex) =>
-                        prevIndex > 0 ? prevIndex - 1 : -1
-                      );
-                      break;
-                    case "Enter":
-                      if (selectedSuggestionIndex >= 0) {
-                        // Si une suggestion est sélectionnée, utilisez-la
-                        e.preventDefault();
-                        selectSuggestion(
-                          filteredSuggestions[selectedSuggestionIndex]
-                        );
-                        setSelectedSuggestionIndex(-1);
-                        setShowSuggestions(false);
-                        setErrorMessage(null);
-                      } else {
-                        // Si aucune suggestion n'est sélectionnée, faites une devinette
-                        handleGuessWithLeagueCheck();
-                      }
-                      break;
-                    case "Tab":
-                      // Auto-compléter avec la première suggestion ou la sélectionnée
-                      if (filteredSuggestions.length > 0) {
-                        e.preventDefault();
-                        const indexToUse =
-                          selectedSuggestionIndex >= 0
-                            ? selectedSuggestionIndex
-                            : 0;
-                        selectSuggestion(filteredSuggestions[indexToUse]);
-                        setSelectedSuggestionIndex(-1);
-                        setShowSuggestions(false);
-                        setErrorMessage(null);
-                      }
-                      break;
-                    case "Escape":
-                      // Fermer les suggestions
-                      setShowSuggestions(false);
-                      setSelectedSuggestionIndex(-1);
-                      break;
-                  }
-                } else if (e.key === "Enter") {
-                  // Si pas de suggestions visibles, juste faire la devinette
-                  handleGuessWithLeagueCheck();
-                }
-              }}
-              onFocus={() => {
-                if (filteredSuggestions.length > 0) {
-                  setShowSuggestions(true);
-                }
-              }}
-              onBlur={() =>
-                setTimeout(() => {
-                  setShowSuggestions(false);
-                  setSelectedSuggestionIndex(-1);
-                }, 200)
-              }
-              placeholder={`Enter a player name${
-                league !== "all"
-                  ? ` from ${
-                      league === "lta-north"
-                        ? "LTA North"
-                        : league === "lta-south"
-                        ? "LTA South"
-                        : league.toUpperCase()
-                    }`
-                  : ""
-              }...`}
-              className="flex-1 p-4 bg-gray-800 text-white rounded-lg border border-gray-700 z-10 guess-input"
-              disabled={gameOver}
-            />
-            <button
-              onClick={handleGuessWithLeagueCheck}
-              className="px-6 py-4 rounded-lg hover:bg-blue-700 guess-button"
-              disabled={gameOver}
-            >
-              Guess
-            </button>
-
-            {showSuggestions && (
-              <ul className="absolute top-full left-0 right-0 mt-2 rounded-lg max-h-60 overflow-y-auto z-20 suggestions-list">
-                {filteredSuggestions.map((suggestion, index) => (
-                  <li
-                    key={index}
-                    id={`suggestion-${index}`}
-                    className={`p-3 cursor-pointer text-white suggestion-item ${
-                      index === selectedSuggestionIndex
-                        ? "bg-blue-700"
-                        : "hover:bg-gray-700"
-                    }`}
-                    onMouseDown={() => {
-                      selectSuggestion(suggestion);
-                      setErrorMessage(null);
-                    }}
-                    onMouseEnter={() => setSelectedSuggestionIndex(index)}
-                    tabIndex={0}
-                  >
-                    {suggestion}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+          <PlayerGuessInput
+            players={players}
+            league={league}
+            leagueFilter={leagueFilter}
+            inputValue={inputValue}
+            setInputValue={setInputValue}
+            showSuggestions={showSuggestions}
+            setShowSuggestions={setShowSuggestions}
+            selectSuggestion={selectSuggestion}
+            setErrorMessage={setErrorMessage}
+            handleGuessWithLeagueCheck={handleGuessWithLeagueCheck}
+            gameOver={gameOver}
+          />
 
           {errorMessage && (
             <div className="text-yellow-400 text-center mb-4 p-3 bg-gray-800 rounded-lg">
@@ -509,52 +308,14 @@ const LOLGame = () => {
             {league === "all" ? "" : "Players list on Liquipedia"}
           </a>
 
-          <div className="text-white mb-6 flex justify-between items-center">
-            <span className="text-lg font-semibold">
-              Attempts: <span className="text-blue-400">{attempts}</span>/
-              {maxAttempts}
-            </span>
-            {gameOver && targetPlayer && (
-              <span className="text-yellow-400 text-lg font-semibold">
-                {guesses.some((g) => g.id === targetPlayer.id)
-                  ? `You won in ${attempts} ${
-                      attempts === 1 ? "try" : "tries"
-                    }!`
-                  : `Game Over! The player was ${targetPlayer.name}`}
-              </span>
-            )}
-          </div>
-
-          <GameTable
-            columns={lolThemeConfig.columns as any}
-            data={guesses as any}
-            correctData={targetPlayer as any}
-            colorMapping={lolThemeConfig.colorMapping}
-            className="mb-8"
-            // Suppression de la propriété allPlayers qui n'existe pas dans GameTableProps
-            onRowClick={(player) => setSelectedPlayer(player as LolPlayerData)}
+          <GameProgress
+            attempts={attempts}
+            maxAttempts={maxAttempts}
+            gameOver={gameOver}
+            targetPlayer={targetPlayer}
+            guesses={guesses}
+            getTimeUntilNextGame={getTimeUntilNextGame}
           />
-
-          {selectedPlayer && (
-            <PlayerDetails
-              player={selectedPlayer}
-              onClose={() => setSelectedPlayer(null)}
-            />
-          )}
-
-          {gameOver && (
-            <div className="flex flex-col items-center mt-8">
-              <div className="text-xl font-semibold text-white mb-2">
-                New game available in
-              </div>
-
-              <CountdownTimer getTimeUntilNextGame={getTimeUntilNextGame} />
-
-              <p className="text-gray-400 mt-4 text-center">
-                A new game will be available at midnight (local time)
-              </p>
-            </div>
-          )}
         </>
       )}
 

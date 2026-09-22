@@ -8,10 +8,27 @@ const API_BASE_URL = "https://dlee-a2ew.onrender.com";
 // Liste des ligues majeures à inclure
 const MAJOR_LEAGUES = ["LEC", "LCK", "LCS", "LPL", "LTA North", "LTA South"];
 
+// Titulaires du split LEC Summer 2026. L'API esports conserve aussi d'anciens
+// joueurs et des remplaçants : son effectif seul ne définit pas le split.
+// À actualiser au début de chaque split.
+const LEC_SPLIT_ROSTER: Record<string, string[]> = {
+  "G2 Esports": ["BrokenBlade", "SkewMond", "Caps", "Hans Sama", "Labrov"],
+  Fnatic: ["Soboro", "Razork", "Vladi", "Upset", "Lospa"],
+  "Karmine Corp": ["Canna", "Yike", "Kyeahoo", "Caliste", "Busio"],
+  "Movistar KOI": ["Myrwn", "Elyoya", "Jojopyun", "Supa", "Alvaro"],
+  GIANTX: ["Oscarinin", "ISMA", "Jackies", "Flakked", "Jun"],
+  "Team Vitality": ["Naak Nako", "Lyncas", "FIESTA", "Carzzy", "Fleshy"],
+  "Team Heretics": ["Tracyn", "Daglas", "Serin", "Hype", "Way"],
+  "SK Gaming": ["Wunder", "Skeanz", "SlowQ", "Jopa", "Mikyx"],
+  "Natus Vincere": ["Maynter", "Rhilech", "Poby", "SamD", "Parus"],
+  Shifters: ["Rooster", "Sheo", "Paduck", "Stend"],
+};
+
 interface EsportsResponse {
   data: {
     teams: Array<{
       name: string;
+      status?: string;
       homeLeague?: {
         name: string;
       };
@@ -179,11 +196,23 @@ export class LolApiAdapter implements DataAdapter<LolPlayerData> {
       data.data.teams.forEach((team) => {
         // Utiliser le filtre de ligue ici
         if (
+          team.status === "active" &&
+          team.players.length >= 5 &&
+          (team.homeLeague?.name !== "LEC" || team.name in LEC_SPLIT_ROSTER) &&
           team.homeLeague?.name &&
           this.leagueFilter.includes(team.homeLeague.name)
         ) {
           team.players.forEach((player) => {
-            if (!uniquePlayers.has(player.summonerName)) {
+            if (
+              player.summonerName?.trim() &&
+              player.role &&
+              player.role !== "none" &&
+              (team.homeLeague?.name !== "LEC" ||
+                LEC_SPLIT_ROSTER[team.name]?.some(
+                  (name) => name.toLowerCase() === player.summonerName.trim().toLowerCase()
+                )) &&
+              !uniquePlayers.has(player.summonerName)
+            ) {
               uniquePlayers.add(player.summonerName);
 
               players.push({
