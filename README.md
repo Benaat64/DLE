@@ -2,7 +2,7 @@
 
 DLE est un petit jeu inspiré de Wordle dans lequel il faut retrouver un joueur professionnel de League of Legends.
 
-J'ai commencé ce projet il y a environ deux ans pour progresser en React et apprendre à utiliser plusieurs API dans une même application.
+J'ai commencé ce projet il y a environ deux ans pour progresser en React et apprendre à utiliser plusieurs API dans une même application. J'y ai travaillé pendant environ un mois, puis je l'ai mis de côté. Je le reprends aujourd'hui pour le remettre à jour et améliorer sa structure.
 
 ## Comment fonctionne le jeu ?
 
@@ -33,7 +33,7 @@ Comme plusieurs joueurs peuvent avoir le même pseudo, je vérifie aussi l'équi
 
 ## Problème actuel
 
-Il y a deux ans, cette méthode fonctionnait correctement. Aujourd'hui, Leaguepedia limite beaucoup plus souvent les requêtes et renvoie `ratelimited`. Je n'ai pas trouvé de quota officiel permettant de comparer précisément l'ancienne et la nouvelle limite.
+Pendant le développement initial, cette méthode fonctionnait correctement. Aujourd'hui, Leaguepedia limite beaucoup plus souvent les requêtes et renvoie `ratelimited`. Je n'ai pas trouvé de quota officiel permettant de comparer précisément l'ancienne et la nouvelle limite.
 
 L'API Riot fonctionne toujours, mais l'âge et la nationalité peuvent donc afficher `N/A` ou `Inconnu`.
 
