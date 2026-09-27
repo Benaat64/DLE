@@ -2,7 +2,7 @@
 
 DLE est un petit jeu inspiré de Wordle dans lequel il faut retrouver un joueur professionnel de League of Legends.
 
-J'ai commencé ce projet il y a environ deux ans pour progresser en React et apprendre à utiliser plusieurs API dans une même application. J'y ai travaillé pendant environ un mois, puis je l'ai mis de côté. Je le reprends aujourd'hui pour le remettre à jour et améliorer sa structure.
+J'ai commencé ce projet il y a environ deux ans pour progresser en React et apprendre à utiliser plusieurs API dans une même application. J'y ai travaillé pendant environ un mois, puis je l'ai mis de côté.
 
 ## Comment fonctionne le jeu ?
 
@@ -37,7 +37,7 @@ Pendant le développement initial, cette méthode fonctionnait correctement. Auj
 
 L'API Riot fonctionne toujours, mais l'âge et la nationalité peuvent donc afficher `N/A` ou `Inconnu`.
 
-J'ai ajouté un cache de 24 heures, évité les requêtes identiques et amélioré la recherche des joueurs ayant le même pseudo. Plus tard, la meilleure solution serait d'enregistrer les joueurs actifs dans une petite base de données et de la mettre à jour automatiquement.
+J'ai ajouté un cache de 24 heures, évité les requêtes identiques et amélioré la recherche des joueurs ayant le même pseudo. Pour rendre le projet vraiment fiable, il faudrait cependant créer ma propre base de données et ma propre API.
 
 ## Technologies
 
@@ -62,3 +62,9 @@ node server.js
 ```
 
 Le dossier `mobile` contient aussi un prototype Expo, mais la version principale du projet est la version web.
+
+## Et pour la suite ?
+
+J'aimerais peut-être reprendre DLE plus tard pour en faire une application multiplateforme avec plusieurs jeux. Cela demanderait de remplacer les API externes par ma propre base de données et ma propre API afin de mieux contrôler les données.
+
+Ce projet reste pour le moment une expérimentation personnelle. Je n'ai pas encore décidé quand, ni même si, je développerai cette nouvelle version.
